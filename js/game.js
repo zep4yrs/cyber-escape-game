@@ -1,794 +1,1651 @@
-// ===== GESTIONNAIRE PRINCIPAL DU JEU =====
-const Game = {
+/* ==========================================================================
+   数字封锁行动 · 游戏引擎
+   game.html / game1.html / game2.html 三页共用
+   --------------------------------------------------------------------------
+   · 欢迎屏 / 断点续玩 / 顶部 HUD / 30 分钟计时 / 判分 / 提示 / 解析
+   · 结束屏 / 逐关记录 / 全部解析弹层
+   · localStorage：live、results、snapshot、lastTeam
+   · BroadcastChannel('cyberEscape') + storage 事件：教师控制台指令与消息
+   · 三语：静态标记交给 I18N.apply，动态内容在 i18n:change 后整体重绘
+   · 无依赖、无 ES module、无内联事件
+   ========================================================================== */
+(function (window, document) {
+  'use strict';
+
+  var I18N = window.I18N;
+  var NS = 'cyberEscape:';
+  var CHANNEL = 'cyberEscape';
+
+  var TOTAL_TIME = 30 * 60; // 30 分钟
+  var MAX_ATTEMPTS = 5;
+  var MAX_HINTS = 3;
+  var BASE_SCORE = 100;
+  var SECONDS_BONUS = 2;
+  var ATTEMPT_PENALTY = 10;
+  var HINT_PENALTY = 20;
+  var AUTO_NEXT_DELAY = 1500;
+  var AUTO_REVEAL_DELAY = 3200;
+  var LIVE_SYNC_MS = 5000;
+
+  var scenarioKey = document.documentElement.getAttribute('data-scenario') || 'main';
+  var scenario = null;
+  var enigmas = [];
+  var missingKeys = [];
+  var configFound = false;
+  var dom = {};
+  var state = {
+    phase: 'welcome', // welcome | playing | paused | finished
+    view: 'welcome',
     team: '',
-    currentEnigma: 1,
-    startTime: 0,
-    totalAttempts: 0,
-    hintsUsed: 0,
-    solvedEnigmas: [],
-    
-    // Initialisation du jeu
-    init: function(teamCode) {
-        this.team = teamCode;
-        this.startTime = Date.now();
-        this.loadProgress();
-        
-        console.log(`🎮 Jeu initialisé pour l'équipe ${teamCode}`);
-    },
-    
-    // Chargement de la progression sauvegardée
-    loadProgress: function() {
-        const saved = localStorage.getItem(`gameProgress_${this.team}`);
-        if (saved) {
-            const data = JSON.parse(saved);
-            this.currentEnigma = data.currentEnigma || 1;
-            this.totalAttempts = data.totalAttempts || 0;
-            this.hintsUsed = data.hintsUsed || 0;
-            this.solvedEnigmas = data.solvedEnigmas || [];
-        }
-    },
-    
-    // Sauvegarde de la progression
-    saveProgress: function() {
-        const data = {
-            team: this.team,
-            currentEnigma: this.currentEnigma,
-            totalAttempts: this.totalAttempts,
-            hintsUsed: this.hintsUsed,
-            solvedEnigmas: this.solvedEnigmas,
-            lastSave: Date.now()
-        };
-        
-        localStorage.setItem(`gameProgress_${this.team}`, JSON.stringify(data));
-    },
-    
-    // Résolution d'une énigme
-    solveEnigma: function(enigmaId) {
-        if (!this.solvedEnigmas.includes(enigmaId)) {
-            this.solvedEnigmas.push(enigmaId);
-            this.currentEnigma = Math.max(this.currentEnigma, enigmaId + 1);
-            this.saveProgress();
-            
-            // Envoi des stats à l'admin (simulation)
-            this.sendStatsToAdmin();
-        }
-    },
-    
-    // Ajout d'une tentative
-    addAttempt: function() {
-        this.totalAttempts++;
-        this.saveProgress();
-    },
-    
-    // Utilisation d'un indice
-    useHint: function() {
-        this.hintsUsed++;
-        this.saveProgress();
-    },
-    
-    // Envoi des statistiques à l'admin
-    sendStatsToAdmin: function() {
-        const stats = {
-            team: this.team,
-            progress: this.solvedEnigmas.length,
-            currentEnigma: this.currentEnigma,
-            time: Math.floor((Date.now() - this.startTime) / 1000),
-            attempts: this.totalAttempts,
-            hints: this.hintsUsed,
-            timestamp: Date.now()
-        };
-        
-        // Dans une vraie implémentation, ceci enverrait les données au serveur
-        localStorage.setItem(`adminStats_${this.team}`, JSON.stringify(stats));
-    },
-    
-    // Getters
-    getTeam: function() { return this.team; },
-    getCurrentEnigma: function() { return this.currentEnigma; },
-    getTotalTime: function() { return Math.floor((Date.now() - this.startTime) / 1000); },
-    getTotalAttempts: function() { return this.totalAttempts; },
-    getHintsUsed: function() { return this.hintsUsed; },
-    getSolvedEnigmas: function() { return this.solvedEnigmas; },
-    
-    // Setters
-    setCurrentEnigma: function(enigmaId) {
-        this.currentEnigma = enigmaId;
-        this.saveProgress();
-    },
-    
-    // Vérification si le jeu est terminé
-    isGameComplete: function() {
-        return this.solvedEnigmas.length >= 6;
-    },
-    
-    // Reset du jeu
-    reset: function() {
-        this.currentEnigma = 1;
-        this.totalAttempts = 0;
-        this.hintsUsed = 0;
-        this.solvedEnigmas = [];
-        this.startTime = Date.now();
-        localStorage.removeItem(`gameProgress_${this.team}`);
-    }
-};
+    teamKey: '',
+    current: 0,
+    per: [],
+    score: 0,
+    elapsedBefore: 0,
+    startedAt: 0,
+    resultStatus: '',
+    pausedByAdmin: false,
+    feedback: null,
+    autoTimer: null,
+    pendingAdvance: false,
+    lastLive: 0,
+    channel: null,
+    seenIds: {},
+    pendingSnapshot: null,
+    modalEl: null,
+    modalOnClose: null,
+    modalLastFocus: null
+  };
 
-// ===== GESTIONNAIRE DES ÉNIGMES =====
-const Enigmas = {
-    // Données des énigmes
-    data: {
-        1: {
-            id: 1,
-            title: "🔐 ÉNIGME 1 : DÉCHIFFRAGE D'URGENCE",
-            description: "Un mot de passe compromis a été intercepté sous forme chiffrée. Décodez-le pour accéder au système !",
-            cipher: "12-15-7-9-14-50-50-52-52",
-            hint: "Pensez à l'alphabet... A=1, B=2, C=3... et regardez bien les chiffres !",
-            answer: "LOGIN2024",
-            code: "LOGIN2024"
-        },
-        2: {
-            id: 2,
-            title: "📧 ÉNIGME 2 : DÉTECTEUR DE PHISHING",
-            description: "Analysez ces emails et identifiez ceux qui sont des tentatives de phishing. Votre vigilance peut sauver l'université !",
-            hint: "Regardez attentivement les domaines, les fautes d'orthographe et les demandes urgentes",
-            answer: [1, 3, 6], // IDs des emails suspects
-            code: "PHISH3"
-        },
-        3: {
-            id: 3,
-            title: "🧩 ÉNIGME 3 : PUZZLE CRYPTOGRAPHIQUE",
-            description: "Reconstituez ce QR code fragmenté pour révéler le code secret. Chaque pièce compte !",
-            hint: "Superposez les éléments dans le bon ordre pour reconstituer l'image complète",
-            answer: "puzzle_complete",
-            code: "DECRYPT7"
-        },
-        4: {
-            id: 4,
-            title: "📶 ÉNIGME 4 : SCANNER WI-FI",
-            description: "Analysez ces réseaux Wi-Fi et identifiez ceux qui représentent une menace de sécurité !",
-            hint: "Méfiez-vous des noms similaires aux vrais réseaux, des protocoles faibles et des configurations par défaut",
-            answer: [3, 5, 8], // IDs des réseaux dangereux
-            code: "WIFI135"
-        },
-        5: {
-            id: 5,
-            title: "👤 ÉNIGME 5 : INGÉNIERIE SOCIALE",
-            description: "Analysez ce profil social pour déduire le mot de passe probable de cette personne. L'ingénierie sociale est une arme redoutable !",
-            hint: "Les gens utilisent souvent des informations personnelles dans leurs mots de passe : lieux, dates, animaux...",
-            answer: "RomeRex2018",
-            code: "SOCIAL9"
-        },
-        6: {
-            id: 6,
-            title: "💻 ÉNIGME FINALE : CODE MAÎTRE",
-            description: "Utilisez tous les codes obtenus pour calculer le code maître et neutraliser définitivement l'attaque !",
-            hint: "Additionnez tous les chiffres des codes précédents et appliquez la transformation finale",
-            answer: "REVENGE",
-            code: "REVENGE"
-        }
-    },
-    
-    // Récupération d'une énigme
-    getEnigma: function(enigmaId) {
-        const enigma = this.data[enigmaId];
-        if (!enigma) return null;
-        
+  /* ------------------------------------------------------------------ *
+   * 小工具
+   * ------------------------------------------------------------------ */
+  function pad2(n) {
+    n = Math.floor(Number(n) || 0);
+    return n < 10 ? '0' + n : String(n);
+  }
+
+  function toArray(list) {
+    return Array.prototype.slice.call(list || []);
+  }
+
+  function clear(node) {
+    if (!node) return;
+    while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  function setText(node, text) {
+    if (node) node.textContent = text == null ? '' : String(text);
+  }
+
+  function show(node, visible) {
+    if (!node) return;
+    node.hidden = !visible;
+  }
+
+  function parseJSON(raw) {
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * localStorage
+   * ------------------------------------------------------------------ */
+  function readJSON(key, fallback) {
+    try {
+      var raw = window.localStorage.getItem(key);
+      var parsed = parseJSON(raw);
+      return parsed == null ? fallback : parsed;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function writeJSON(key, value) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      /* 隐私模式 / 配额满：静默失败 */
+    }
+  }
+
+  function readRaw(key, fallback) {
+    try {
+      var raw = window.localStorage.getItem(key);
+      return raw == null ? fallback : raw;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function writeRaw(key, value) {
+    try {
+      window.localStorage.setItem(key, String(value));
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function removeKey(key) {
+    try {
+      window.localStorage.removeItem(key);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 场景与关卡数据（防御性读取）
+   * ------------------------------------------------------------------ */
+  function fallbackScenario() {
+    return {
+      key: scenarioKey,
+      code: '—',
+      page: window.location.pathname,
+      difficulty: 1,
+      label: { zh: '未知模式', en: 'Unknown mode', fr: 'Mode inconnu' },
+      title: { zh: '数字封锁行动', en: 'Operation Digital Lockdown', fr: 'Opération Digital Lockdown' },
+      briefing: { zh: '', en: '', fr: '' },
+      enigmas: []
+    };
+  }
+
+  function resolveScenario() {
+    var all = window.SCENARIOS;
+    if (all && typeof all === 'object' && all[scenarioKey] && typeof all[scenarioKey] === 'object') {
+      configFound = true;
+      return all[scenarioKey];
+    }
+    configFound = false;
+    return fallbackScenario();
+  }
+
+  function resolveEnigmas() {
+    enigmas = [];
+    missingKeys = [];
+    var registry = window.ENIGMAS;
+    var keys = scenario && Array.isArray(scenario.enigmas) ? scenario.enigmas : [];
+    keys.forEach(function (key) {
+      var item = registry && typeof registry === 'object' ? registry[key] : null;
+      if (item && typeof item === 'object') enigmas.push(item);
+      else missingKeys.push(String(key));
+    });
+  }
+
+  function currentEnigma() {
+    return enigmas[state.current] || null;
+  }
+
+  function enigmaTitle(enigma) {
+    if (!enigma) return '';
+    var title = I18N.pick(enigma.title);
+    return title || enigma.code || '';
+  }
+
+  function enigmaTag(enigma) {
+    return enigma ? I18N.pick(enigma.tag) : '';
+  }
+
+  function enigmaHints(enigma) {
+    var raw = enigma ? I18N.pickRaw(enigma.hints) : null;
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  function answerDisplay(enigma) {
+    if (!enigma || enigma.answer == null) return '—';
+    var value = I18N.pick(enigma.answer);
+    return value == null || value === '' ? '—' : String(value);
+  }
+
+  function normalizeAnswer(raw) {
+    var text = String(raw == null ? '' : raw).trim().toUpperCase();
+    text = text.replace(/\s+/g, '');
+    text = text.replace(/[，、；：]/g, function (ch) {
+      if (ch === '；') return ';';
+      if (ch === '：') return ':';
+      return ',';
+    });
+    return text;
+  }
+
+  function acceptedAnswers(enigma) {
+    var out = [];
+    if (!enigma) return out;
+    var answer = enigma.answer;
+    if (answer != null) {
+      if (typeof answer === 'object' && !Array.isArray(answer)) {
+        // 按语言区分的答案：只取当前语言（I18N.pick 已含中文回退）
+        out.push(I18N.pick(answer));
+      } else {
+        out.push(I18N.pick(answer));
+      }
+    }
+    if (Array.isArray(enigma.accept)) {
+      enigma.accept.forEach(function (item) {
+        out.push(I18N.pick(item));
+      });
+    }
+    return out.filter(function (item) {
+      return item != null && String(item).length > 0;
+    });
+  }
+
+  function isCorrectAnswer(enigma, raw) {
+    var given = normalizeAnswer(raw);
+    if (!given) return false;
+    var candidates = acceptedAnswers(enigma);
+    for (var i = 0; i < candidates.length; i++) {
+      if (normalizeAnswer(candidates[i]) === given) return true;
+    }
+    return false;
+  }
+
+  function teamKeyOf(team) {
+    var base = String(team == null ? '' : team).toLowerCase().trim();
+    try {
+      base = base.replace(/[^\p{L}\p{N}]+/gu, '');
+    } catch (e) {
+      base = base.replace(/[^\w\u4e00-\u9fff]+/g, '');
+    }
+    return base || 'team';
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 计时与进度
+   * ------------------------------------------------------------------ */
+  function freshPerEntry() {
+    return { attempts: 0, hints: 0, resolved: false, revealed: false, score: 0, draft: '' };
+  }
+
+  function elapsedSeconds() {
+    if (state.phase === 'playing') {
+      return state.elapsedBefore + Math.max(0, Math.floor((Date.now() - state.startedAt) / 1000));
+    }
+    return state.elapsedBefore;
+  }
+
+  function remainingSeconds() {
+    return Math.max(0, TOTAL_TIME - elapsedSeconds());
+  }
+
+  function startClock() {
+    state.startedAt = Date.now();
+  }
+
+  function stopClock() {
+    state.elapsedBefore = Math.min(TOTAL_TIME, elapsedSeconds());
+  }
+
+  function resolvedCount() {
+    var count = 0;
+    for (var i = 0; i < state.per.length; i++) {
+      if (state.per[i] && state.per[i].resolved) count++;
+    }
+    return count;
+  }
+
+  function allResolved() {
+    return enigmas.length > 0 && resolvedCount() === enigmas.length;
+  }
+
+  function sumAttempts() {
+    return state.per.reduce(function (total, item) {
+      return total + (item ? Number(item.attempts) || 0 : 0);
+    }, 0);
+  }
+
+  function sumHints() {
+    return state.per.reduce(function (total, item) {
+      return total + (item ? Number(item.hints) || 0 : 0);
+    }, 0);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * DOM 缓存
+   * ------------------------------------------------------------------ */
+  function cacheDom() {
+    var ids = [
+      'viewWelcome', 'viewStage', 'viewFinish',
+      'welcomeCode', 'welcomeTitle', 'welcomeBrief', 'welcomeLabel', 'welcomeDifficulty',
+      'welcomeStages', 'welcomeMode', 'welcomeStageCount', 'welcomeDuration',
+      'teamForm', 'teamInput', 'teamError', 'startBtn', 'resumeBtn', 'dataEmpty', 'dataEmptyBody',
+      'hud', 'hudMode', 'hudTeam', 'hudTimer', 'hudScore', 'hudStageLabel', 'hudProgress', 'pauseBtn',
+      'indexList',
+      'enigmaCard', 'enigmaCode', 'enigmaTag', 'enigmaCount', 'enigmaState', 'enigmaTitle',
+      'enigmaBrief', 'enigmaContent', 'answerArea', 'answerForm', 'answerInput', 'submitBtn',
+      'answerNote', 'attemptsLabel', 'hintBtn', 'hintsCount', 'hints', 'feedback',
+      'solvedPanel', 'solvedStamp', 'solvedAnswer', 'solvedBody', 'autoNote', 'prevBtn', 'nextBtn',
+      'finishTitle', 'finishStamp', 'statSolved', 'statScore', 'statTime', 'statStatus',
+      'reportId', 'reportBody', 'solutionsBtn', 'againBtn',
+      'resumeMeta', 'resumeContinue', 'resumeRestart',
+      'pauseMeta', 'pauseResume',
+      'timeoutMeta', 'timeoutSolutions', 'timeoutAgain',
+      'solutionsBody',
+      'modalResume', 'modalPause', 'modalTimeout', 'modalSolutions',
+      'toastStack'
+    ];
+    ids.forEach(function (id) {
+      dom[id] = document.getElementById(id);
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Toast
+   * ------------------------------------------------------------------ */
+  function toast(text, tone) {
+    if (!dom.toastStack || !text) return;
+    var node = document.createElement('div');
+    node.className = 'toast' + (tone ? ' toast--' + tone : '');
+    node.setAttribute('role', 'status');
+    var body = document.createElement('p');
+    body.textContent = String(text);
+    node.appendChild(body);
+    dom.toastStack.appendChild(node);
+    window.setTimeout(function () {
+      node.classList.add('is-leaving');
+      window.setTimeout(function () {
+        if (node.parentNode) node.parentNode.removeChild(node);
+      }, 320);
+    }, 4200);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 弹层（含焦点管理与 Esc / Tab 循环）
+   * ------------------------------------------------------------------ */
+  function focusableIn(node) {
+    var nodes = node.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    return toArray(nodes).filter(function (item) {
+      return !item.disabled && item.getClientRects().length > 0;
+    });
+  }
+
+  function onModalKeydown(event) {
+    var modal = state.modalEl;
+    if (!modal || modal.hidden) {
+      document.removeEventListener('keydown', onModalKeydown, true);
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeModal(modal);
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    var nodes = focusableIn(modal);
+    if (!nodes.length) return;
+    var first = nodes[0];
+    var last = nodes[nodes.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  function openModal(target, onClose) {
+    var modal = typeof target === 'string' ? document.getElementById(target) : target;
+    if (!modal || !modal.hidden) return;
+    state.modalLastFocus = document.activeElement;
+    state.modalEl = modal;
+    state.modalOnClose = typeof onClose === 'function' ? onClose : null;
+    modal.hidden = false;
+    document.addEventListener('keydown', onModalKeydown, true);
+    var nodes = focusableIn(modal);
+    var preferred = modal.querySelector('[data-autofocus]') || modal.querySelector('.modal__close');
+    var targetNode = preferred && !preferred.disabled ? preferred : nodes[0];
+    if (targetNode && targetNode.focus) {
+      try {
+        targetNode.focus();
+      } catch (e) {
+        /* ignore */
+      }
+    }
+  }
+
+  function closeModal(target, options) {
+    var modal = typeof target === 'string' ? document.getElementById(target) : target;
+    if (!modal || modal.hidden) return;
+    var callback = state.modalOnClose;
+    state.modalOnClose = null;
+    modal.hidden = true;
+    document.removeEventListener('keydown', onModalKeydown, true);
+    if (state.modalLastFocus && document.contains(state.modalLastFocus) && state.modalLastFocus.focus) {
+      try {
+        state.modalLastFocus.focus();
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    state.modalLastFocus = null;
+    if (state.modalEl === modal) state.modalEl = null;
+    if ((!options || !options.silent) && callback) callback();
+  }
+
+  function closeAllModals() {
+    ['modalResume', 'modalPause', 'modalTimeout', 'modalSolutions'].forEach(function (id) {
+      var modal = document.getElementById(id);
+      if (modal && !modal.hidden) closeModal(modal, { silent: true });
+    });
+    state.modalOnClose = null;
+  }
+
+  /* ------------------------------------------------------------------ *
+   * BroadcastChannel / storage
+   * ------------------------------------------------------------------ */
+  function bcast(payload) {
+    if (!state.channel) return;
+    try {
+      state.channel.postMessage(payload);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function setupBroadcast() {
+    try {
+      if (typeof window.BroadcastChannel === 'function') {
+        state.channel = new window.BroadcastChannel(CHANNEL);
+        state.channel.onmessage = function (event) {
+          handleMessage(event && event.data);
+        };
+      }
+    } catch (e) {
+      state.channel = null;
+    }
+    window.addEventListener('storage', onStorage);
+  }
+
+  function onStorage(event) {
+    if (!event || !event.key || event.key.indexOf(NS) !== 0) return;
+    var payload = parseJSON(event.newValue);
+    if (!payload || typeof payload !== 'object') return;
+    if (event.key === NS + 'command') {
+      handleMessage({ type: 'command', cmd: payload.cmd, id: payload.id });
+    } else if (event.key === NS + 'broadcast') {
+      handleMessage({ type: 'broadcast', text: payload.text, id: payload.id });
+    } else if (event.key === NS + 'hint') {
+      handleMessage({ type: 'hint', text: payload.text, id: payload.id });
+    }
+  }
+
+  function handleMessage(message) {
+    if (!message || typeof message !== 'object') return;
+    var id = message.id == null ? '' : String(message.id);
+    if (id) {
+      if (state.seenIds[id]) return;
+      state.seenIds[id] = true;
+      var keys = Object.keys(state.seenIds);
+      if (keys.length > 160) {
+        keys.slice(0, 80).forEach(function (key) {
+          delete state.seenIds[key];
+        });
+      }
+    }
+    if (message.type === 'command') {
+      handleCommand(message.cmd);
+    } else if (message.type === 'broadcast') {
+      if (message.text) toast(I18N.t('game.toast.broadcast', { text: message.text }), 'warn');
+    } else if (message.type === 'hint') {
+      if (message.text) toast(I18N.t('game.toast.hint', { text: message.text }), 'ok');
+    }
+  }
+
+  function handleCommand(cmd) {
+    if (cmd === 'pause') {
+      if (state.phase === 'playing') {
+        toast(I18N.t('game.toast.paused'), 'warn');
+        pauseGame(true);
+      }
+    } else if (cmd === 'resume') {
+      if (state.phase === 'paused') {
+        closeModal('modalPause', { silent: true });
+        resumeGame();
+        toast(I18N.t('game.toast.resumed'), 'ok');
+      }
+    } else if (cmd === 'reset') {
+      resetByAdmin();
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 存档 / live / results
+   * ------------------------------------------------------------------ */
+  function snapKey() {
+    return NS + 'snapshot:' + scenarioKey;
+  }
+
+  function buildSnapshot() {
+    return {
+      v: 1,
+      scenario: scenarioKey,
+      team: state.team,
+      teamKey: state.teamKey,
+      current: state.current,
+      score: state.score,
+      elapsed: Math.max(0, Math.min(TOTAL_TIME - 1, Math.floor(elapsedSeconds()))),
+      per: state.per.map(function (item) {
+        item = item || freshPerEntry();
         return {
-            ...enigma,
-            render: () => this.renderEnigma(enigmaId)
+          attempts: Number(item.attempts) || 0,
+          hints: Number(item.hints) || 0,
+          resolved: !!item.resolved,
+          revealed: !!item.revealed,
+          score: Number(item.score) || 0,
+          draft: typeof item.draft === 'string' ? item.draft : ''
         };
-    },
-    
-    // Rendu HTML d'une énigme
-    renderEnigma: function(enigmaId) {
-        switch(enigmaId) {
-            case 1: return this.renderEnigma1();
-            case 2: return this.renderEnigma2();
-            case 3: return this.renderEnigma3();
-            case 4: return this.renderEnigma4();
-            case 5: return this.renderEnigma5();
-            case 6: return this.renderEnigma6();
-            default: return '<div>Énigme non trouvée</div>';
-        }
-    },
-    
-    // Rendu énigme 1 - Déchiffrage
-    renderEnigma1: function() {
-        return `
-        <div class="enigma-container">
-            <h2 class="enigma-title">${this.data[1].title}</h2>
-            <p class="enigma-description">${this.data[1].description}</p>
-            
-            <div class="enigma-content">
-                <div class="cipher-box">
-                    <h3>🔢 Code intercepté :</h3>
-                    <div class="cipher-display">${this.data[1].cipher}</div>
-                    
-                    <div class="alphabet-helper">
-                        <strong>💡 Aide au déchiffrement :</strong><br>
-                        A=1 B=2 C=3 D=4 E=5 F=6 G=7 H=8 I=9 J=10 K=11 L=12 M=13<br>
-                        N=14 O=15 P=16 Q=17 R=18 S=19 T=20 U=21 V=22 W=23 X=24 Y=25 Z=26
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="decodedAnswer">🔓 Mot de passe décodé :</label>
-                        <input type="text" id="decodedAnswer" placeholder="Entrez le mot de passe déchiffré" autocomplete="off">
-                    </div>
-                    
-                    <div class="action-buttons">
-                        <button class="btn primary" onclick="validateEnigma1()">🚀 VALIDER</button>
-                        <button class="btn" onclick="getHint(1)">💡 INDICE</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    },
-    
-    // Rendu énigme 2 - Phishing
-    renderEnigma2: function() {
-        const emails = [
-            {
-                id: 1,
-                from: "securite@bank-creditt-agricol.com",
-                subject: "URGENT - Vérifiez votre compte",
-                body: "Votre compte sera suspendu dans 24h si vous ne confirmez pas votre identité. Cliquez ici : http://bank-verificaton.tk/login",
-                isPhishing: true
-            },
-            {
-                id: 2,
-                from: "notifications@paypal.com",
-                subject: "Récapitulatif mensuel PayPal",
-                body: "Voici votre récapitulatif d'activité du mois dernier. Consultez vos transactions sur https://www.paypal.com/myaccount",
-                isPhishing: false
-            },
-            {
-                id: 3,
-                from: "admin@universite-campus.fr",
-                subject: "Maintenance serveur ce weekend",
-                body: "Maintenance prévue ce weekend. Changez votre mot de passe via ce lien : http://bit.ly/campusmaint",
-                isPhishing: true
-            },
-            {
-                id: 4,
-                from: "support@microsoft.com",
-                subject: "Mise à jour de sécurité",
-                body: "Une mise à jour importante est disponible pour votre compte. Téléchargez-la sur https://www.microsoft.com/security",
-                isPhishing: false
-            },
-            {
-                id: 5,
-                from: "contact@amazon.com",
-                subject: "Votre commande #12345",
-                body: "Votre commande a été expédiée et arrivera demain. Suivez-la sur https://www.amazon.fr/tracking",
-                isPhishing: false
-            },
-            {
-                id: 6,
-                from: "noreply@googlle.com",
-                subject: "Activité suspecte détectée",
-                body: "Connexion détectée depuis un nouvel appareil. Sécurisez votre compte : http://secure-google.tk/verify",
-                isPhishing: true
-            }
-        ];
-        
-        let emailsHTML = '';
-        emails.forEach(email => {
-            emailsHTML += `
-            <div class="email-card" onclick="toggleEmailSelection(${email.id})" id="email${email.id}">
-                <div class="email-header">
-                    <strong>De :</strong> ${email.from}<br>
-                    <strong>Objet :</strong> ${email.subject}
-                </div>
-                <div class="email-body">${email.body}</div>
-                <div class="email-suspicious">
-                    <label>
-                        <input type="checkbox" id="checkbox${email.id}" onchange="updateEmailSelection(${email.id})">
-                        🚨 Email suspect (Phishing)
-                    </label>
-                </div>
-            </div>`;
-        });
-        
-        return `
-        <div class="enigma-container">
-            <h2 class="enigma-title">${this.data[2].title}</h2>
-            <p class="enigma-description">${this.data[2].description}</p>
-            
-            <div class="enigma-content">
-                <div class="email-detector">
-                    <h3>📧 Analysez ces emails :</h3>
-                    ${emailsHTML}
-                    
-                    <div class="action-buttons">
-                        <button class="btn primary" onclick="validateEnigma2()">🔍 ANALYSER LES MENACES</button>
-                        <button class="btn" onclick="getHint(2)">💡 INDICE</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    },
-    
-    // Rendu énigme 3 - Puzzle
-    renderEnigma3: function() {
-        return `
-        <div class="enigma-container">
-            <h2 class="enigma-title">${this.data[3].title}</h2>
-            <p class="enigma-description">${this.data[3].description}</p>
-            
-            <div class="enigma-content">
-                <div class="puzzle-container">
-                    <h3>🧩 Reconstituez le QR Code :</h3>
-                    
-                    <canvas id="puzzleCanvas" class="puzzle-canvas" width="300" height="300"></canvas>
-                    
-                    <div class="puzzle-pieces" id="puzzlePieces">
-                        <div class="puzzle-piece" draggable="true" data-piece="1" ondragstart="drag(event)">
-                            ⬛⬜⬛<br>⬜⬛⬜<br>⬛⬜⬛
-                        </div>
-                        <div class="puzzle-piece" draggable="true" data-piece="2" ondragstart="drag(event)">
-                            ⬜⬛⬜<br>⬛⬜⬛<br>⬜⬛⬜
-                        </div>
-                        <div class="puzzle-piece" draggable="true" data-piece="3" ondragstart="drag(event)">
-                            ⬛⬜⬛<br>⬜⬛⬜<br>⬛⬜⬛
-                        </div>
-                        <div class="puzzle-piece" draggable="true" data-piece="4" ondragstart="drag(event)">
-                            ⬜⬛⬜<br>⬛⬜⬛<br>⬜⬛⬜
-                        </div>
-                    </div>
-                    
-                    <div id="puzzleResult" class="hidden">
-                        <h4>🎯 QR CODE RECONSTITUÉ !</h4>
-                        <div class="qr-revealed">
-                            <pre>
-█▀▀▀▀▀█ ▀▀█ █▀▀▀▀▀█
-█ ███ █ ▀▀▀ █ ███ █
-█ ▀▀▀ █ ███ █ ▀▀▀ █
-▀▀▀▀▀▀▀ ▀ █ ▀▀▀▀▀▀▀
-██ ▀▀▀▀▀███▀▀▀██▀▀█
-▀▀▀███▀██▀██▀██▀███
-█▀▀▀▀▀█ ██▀ ▀ █▀▀▀█
-█ ███ █ ▀▀▀▀██ ▀▀▀█
-█ ▀▀▀ █ █▀▀▀▀██ ▀██
-▀▀▀▀▀▀▀ ▀▀▀▀▀▀▀▀▀▀▀
-                            </pre>
-                        </div>
-                        <p><strong>Code révélé : DECRYPT7</strong></p>
-                    </div>
-                    
-                    <div class="action-buttons">
-                        <button class="btn primary" onclick="validateEnigma3()">🔓 DÉCODER</button>
-                        <button class="btn" onclick="getHint(3)">💡 INDICE</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    },
-    
-    // Rendu énigme 4 - WiFi
-    renderEnigma4: function() {
-        const networks = [
-            {id: 1, name: "CAMPUS-SECURE", security: "WPA3", signal: 95, safe: true},
-            {id: 2, name: "FreeWiFi-Guest", security: "Open", signal: 78, safe: false},
-            {id: 3, name: "CAMPUS-SECU", security: "WEP", signal: 88, safe: false}, // Fake
-            {id: 4, name: "iPhone_hotspot", security: "WPA2", signal: 67, safe: true},
-            {id: 5, name: "TP-LINK_DEFAULT", security: "WEP (admin/admin)", signal: 45, safe: false},
-            {id: 6, name: "McDonaldsFree", security: "Open", signal: 34, safe: false},
-            {id: 7, name: "CAMPUS-BACKUP", security: "WPA3", signal: 92, safe: true},
-            {id: 8, name: "wifi_gratuit", security: "Open", signal: 56, safe: false}
-        ];
-        
-        let networksHTML = '';
-        networks.forEach(network => {
-            const signalBars = '▮'.repeat(Math.floor(network.signal/20));
-            networksHTML += `
-            <div class="wifi-item" onclick="toggleWifiSelection(${network.id})" id="wifi${network.id}">
-                <span class="wifi-name">${network.name}</span>
-                <span class="wifi-security">${network.security}</span>
-                <span class="wifi-signal">${signalBars} ${network.signal}%</span>
-                <label>
-                    <input type="checkbox" id="wifiCheckbox${network.id}" onchange="updateWifiSelection(${network.id})">
-                    ⚠️ Dangereux
-                </label>
-            </div>`;
-        });
-        
-        return `
-        <div class="enigma-container">
-            <h2 class="enigma-title">${this.data[4].title}</h2>
-            <p class="enigma-description">${this.data[4].description}</p>
-            
-            <div class="enigma-content">
-                <div class="wifi-scanner">
-                    <div id="scanningIndicator" class="scanning">
-                        🔍 Scan des réseaux Wi-Fi en cours...
-                    </div>
-                    
-                    <div id="wifiResults" class="wifi-list hidden">
-                        <h3>📡 Réseaux détectés :</h3>
-                        ${networksHTML}
-                    </div>
-                    
-                    <div class="action-buttons">
-                        <button class="btn" onclick="startWifiScan()">📶 SCANNER</button>
-                        <button class="btn primary" onclick="validateEnigma4()">🛡️ IDENTIFIER MENACES</button>
-                        <button class="btn" onclick="getHint(4)">💡 INDICE</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    },
-    
-    // Rendu énigme 5 - Profil social
-    renderEnigma5: function() {
-        return `
-        <div class="enigma-container">
-            <h2 class="enigma-title">${this.data[5].title}</h2>
-            <p class="enigma-description">${this.data[5].description}</p>
-            
-            <div class="enigma-content">
-                <div class="social-profile">
-                    <div class="profile-header">
-                        <div style="width: 80px; height: 80px; background: #444; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 24px;">👩</div>
-                        <h3>Julie Martin</h3>
-                        <p>📍 Actuellement à Rome</p>
-                        <p>🏢 TechCorp - Équipe IT</p>
-                    </div>
-                    
-                    <div class="posts">
-                        <div class="post" onclick="analyzePost(1)" id="post1">
-                            <p>🏛️ En vacances à Rome ! Magnifique ville où je suis née ❤️ #VacancesRome #Patrimoine</p>
-                            <small>📍 Rome, Italie • Il y a 2 heures</small>
-                        </div>
-                        
-                        <div class="post" onclick="analyzePost(2)" id="post2">
-                            <p>🐕 Mon chien Rex fête ses 6 ans aujourd'hui ! Adopté en 2018, c'est mon fidèle compagnon 💕 #DogLover #Rex</p>
-                            <small>Il y a 1 jour</small>
-                        </div>
-                        
-                        <div class="post" onclick="analyzePost(3)" id="post3">
-                            <p>👔 Premier jour chez TechCorp ! Fière de rejoindre l'équipe IT. Nouveau badge, nouveaux défis ! 💻</p>
-                            <small>Il y a 1 semaine</small>
-                        </div>
-                        
-                        <div class="post" onclick="analyzePost(4)" id="post4">
-                            <p>🎂 Merci pour tous vos messages d'anniversaire ! 28 ans et toujours aussi motivée ! 🎉</p>
-                            <small>Il y a 2 semaines</small>
-                        </div>
-                    </div>
-                    
-                    <div class="password-generator">
-                        <h4>🔐 Générer le mot de passe probable :</h4>
-                        <p><small>Analysez les informations personnelles pour deviner son mot de passe</small></p>
-                        <div class="input-group">
-                            <input type="text" id="socialPassword" placeholder="Combinaison probable des indices...">
-                        </div>
-                        
-                        <div class="action-buttons">
-                            <button class="btn primary" onclick="validateEnigma5()">🔍 TENTER L'ACCÈS</button>
-                            <button class="btn" onclick="getHint(5)">💡 INDICE</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    },
-    
-    // Rendu énigme 6 - Terminal final
-    renderEnigma6: function() {
-        return `
-        <div class="enigma-container">
-            <h2 class="enigma-title">${this.data[6].title}</h2>
-            <p class="enigma-description">${this.data[6].description}</p>
-            
-            <div class="enigma-content">
-                <div class="master-terminal">
-                    <div class="terminal-header-master">
-                        <span class="terminal-title">🖥️ TERMINAL DE NEUTRALISATION</span>
-                        <span class="terminal-status">STATUT: 🔴 ATTAQUE EN COURS</span>
-                    </div>
-                    
-                    <div class="terminal-output" id="terminalOutput">
-                        <p>$ Initialisation du protocole de contre-attaque...</p>
-                        <p>$ Codes de sécurité requis : 5/5</p>
-                        <p>$ Entrez vos codes obtenus dans les énigmes précédentes :</p>
-                        <p class="text-green">$ Codes attendus : LOGIN2024, PHISH3, DECRYPT7, WIFI135, SOCIAL9</p>
-                    </div>
-                    
-                    <div class="terminal-input">
-                        <span>$</span>
-                        <input type="text" id="terminalCommand" placeholder="Entrez un code..." autocomplete="off" onkeypress="handleTerminalEnter(event)">
-                        <button onclick="executeTerminalCommand()" class="btn">EXÉCUTER</button>
-                    </div>
-                </div>
-                
-                <div id="algorithmSection" class="hidden">
-                    <h4>🧮 Calcul du code maître :</h4>
-                    <div class="algorithm-display">
-                        <p>LOGIN2024 → 2024</p>
-                        <p>PHISH3 → 3</p>
-                        <p>DECRYPT7 → 7</p>
-                        <p>WIFI135 → 135</p>
-                        <p>SOCIAL9 → 9</p>
-                        <p class="text-orange">SOMME: 2024 + 3 + 7 + 135 + 9 = 2178</p>
-                        <p class="text-green">Transformation: 2178 → REVENGE</p>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label>🔐 Code maître final :</label>
-                        <input type="text" id="masterCode" placeholder="Code de neutralisation">
-                    </div>
-                    
-                    <div class="action-buttons">
-                        <button class="btn danger" onclick="validateEnigma6()">💥 NEUTRALISER L'ATTAQUE</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    },
-    
-    // Vérification des réponses
-    checkAnswer: function(enigmaId, answer) {
-        const enigma = this.data[enigmaId];
-        if (!enigma) return false;
-        
-        switch(enigmaId) {
-            case 1:
-                return answer.toUpperCase().replace(/\s+/g, '') === enigma.answer;
-            
-            case 2:
-                // Vérifie si les bons emails de phishing sont sélectionnés
-                const expectedPhishing = [1, 3, 6];
-                return JSON.stringify(answer.sort()) === JSON.stringify(expectedPhishing);
-            
-            case 3:
-                return answer === enigma.answer;
-            
-            case 4:
-                // Vérifie si les bons réseaux dangereux sont sélectionnés
-                const expectedDangerous = [3, 5, 8];
-                return JSON.stringify(answer.sort()) === JSON.stringify(expectedDangerous);
-            
-            case 5:
-                return answer.toLowerCase().replace(/\s+/g, '') === enigma.answer.toLowerCase();
-            
-            case 6:
-                return answer.toUpperCase().replace(/\s+/g, '') === enigma.answer;
-            
-            default:
-                return false;
-        }
-    }
-};
-
-// ===== FONCTIONS DE VALIDATION DES ÉNIGMES =====
-
-function validateEnigma1() {
-    const answer = document.getElementById('decodedAnswer').value;
-    const isCorrect = Enigmas.checkAnswer(1, answer);
-    
-    if (isCorrect) {
-        showNotification('✅ Excellent ! Code LOGIN2024 accepté !', 'success');
-        Game.solveEnigma(1);
-        setTimeout(() => nextEnigma(), 1500);
-    } else {
-        showNotification('❌ Code incorrect ! Vérifiez votre déchiffrement...', 'error');
-        Game.addAttempt();
-        document.getElementById('decodedAnswer').classList.add('shake');
-        setTimeout(() => {
-            document.getElementById('decodedAnswer').classList.remove('shake');
-        }, 500);
-    }
-}
-
-// Variables globales pour les sélections
-let selectedEmails = [];
-let selectedWifis = [];
-
-function toggleEmailSelection(emailId) {
-    const checkbox = document.getElementById(`checkbox${emailId}`);
-    checkbox.checked = !checkbox.checked;
-    updateEmailSelection(emailId);
-}
-
-function updateEmailSelection(emailId) {
-    const checkbox = document.getElementById(`checkbox${emailId}`);
-    const emailCard = document.getElementById(`email${emailId}`);
-    
-    if (checkbox.checked) {
-        if (!selectedEmails.includes(emailId)) {
-            selectedEmails.push(emailId);
-        }
-        emailCard.classList.add('selected');
-    } else {
-        selectedEmails = selectedEmails.filter(id => id !== emailId);
-        emailCard.classList.remove('selected');
-    }
-}
-
-function validateEnigma2() {
-    const isCorrect = Enigmas.checkAnswer(2, selectedEmails);
-    
-    if (isCorrect) {
-        showNotification('✅ Parfait ! Vous avez identifié tous les emails de phishing !', 'success');
-        Game.solveEnigma(2);
-        setTimeout(() => nextEnigma(), 1500);
-    } else {
-        showNotification('❌ Certains emails dangereux ne sont pas identifiés ou vous avez sélectionné des emails légitimes...', 'error');
-        Game.addAttempt();
-    }
-}
-
-// Puzzle énigme 3
-let puzzleCompleted = false;
-
-function drag(event) {
-    event.dataTransfer.setData("text", event.target.dataset.piece);
-}
-
-function allowDrop(event) {
-    event.preventDefault();
-}
-
-function drop(event) {
-    event.preventDefault();
-    const pieceId = event.dataTransfer.getData("text");
-    // Logique de placement des pièces
-    checkPuzzleCompletion();
-}
-
-function checkPuzzleCompletion() {
-    // Simulation de la completion du puzzle
-    setTimeout(() => {
-        puzzleCompleted = true;
-        document.getElementById('puzzleResult').classList.remove('hidden');
-        showNotification('🧩 Puzzle reconstitué ! QR Code décodé !', 'success');
-    }, 2000);
-}
-
-function validateEnigma3() {
-    if (puzzleCompleted) {
-        Game.solveEnigma(3);
-        setTimeout(() => nextEnigma(), 1500);
-    } else {
-        showNotification('❌ Terminez d\'abord le puzzle !', 'error');
-        Game.addAttempt();
-    }
-}
-
-// WiFi énigme 4
-function startWifiScan() {
-    const scanIndicator = document.getElementById('scanningIndicator');
-    const results = document.getElementById('wifiResults');
-    
-    scanIndicator.textContent = '🔍 Scan en cours...';
-    
-    setTimeout(() => {
-        scanIndicator.classList.add('hidden');
-        results.classList.remove('hidden');
-        showNotification('📶 Scan terminé ! Analysez les réseaux détectés.', 'info');
-    }, 3000);
-}
-
-function toggleWifiSelection(wifiId) {
-    const checkbox = document.getElementById(`wifiCheckbox${wifiId}`);
-    checkbox.checked = !checkbox.checked;
-    updateWifiSelection(wifiId);
-}
-
-function updateWifiSelection(wifiId) {
-    const checkbox = document.getElementById(`wifiCheckbox${wifiId}`);
-    const wifiCard = document.getElementById(`wifi${wifiId}`);
-    
-    if (checkbox.checked) {
-        if (!selectedWifis.includes(wifiId)) {
-            selectedWifis.push(wifiId);
-        }
-        wifiCard.classList.add('danger');
-    } else {
-        selectedWifis = selectedWifis.filter(id => id !== wifiId);
-        wifiCard.classList.remove('danger');
-    }
-}
-
-function validateEnigma4() {
-    const isCorrect = Enigmas.checkAnswer(4, selectedWifis);
-    
-    if (isCorrect) {
-        showNotification('✅ Excellent ! Vous avez identifié toutes les menaces Wi-Fi !', 'success');
-        Game.solveEnigma(4);
-        setTimeout(() => nextEnigma(), 1500);
-    } else {
-        showNotification('❌ Certains réseaux dangereux ne sont pas identifiés...', 'error');
-        Game.addAttempt();
-    }
-}
-
-// Profil social énigme 5
-function analyzePost(postId) {
-    const post = document.getElementById(`post${postId}`);
-    post.classList.add('analyzed');
-    
-    const hints = {
-        1: 'Ville de naissance révélée : Rome',
-        2: 'Animal de compagnie : Rex, adopté en 2018',
-        3: 'Nouvel emploi chez TechCorp',
-        4: 'Âge : 28 ans'
+      }),
+      savedAt: Date.now()
     };
-    
-    showNotification(`💡 Indice collecté : ${hints[postId]}`, 'info');
-}
+  }
 
-function validateEnigma5() {
-    const answer = document.getElementById('socialPassword').value;
-    const isCorrect = Enigmas.checkAnswer(5, answer);
-    
-    if (isCorrect) {
-        showNotification('✅ Mot de passe trouvé ! Accès accordé au système !', 'success');
-        Game.solveEnigma(5);
-        setTimeout(() => nextEnigma(), 1500);
-    } else {
-        showNotification('❌ Mot de passe incorrect ! Analysez mieux les informations...', 'error');
-        Game.addAttempt();
-    }
-}
+  function saveSnapshot() {
+    if (state.phase !== 'playing' && state.phase !== 'paused') return;
+    if (!state.teamKey) return;
+    var payload = buildSnapshot();
+    writeJSON(snapKey(), payload);
+    state.pendingSnapshot = payload;
+    updateResumeAffordance();
+  }
 
-// Terminal énigme 6
-let enteredCodes = [];
-const requiredCodes = ['LOGIN2024', 'PHISH3', 'DECRYPT7', 'WIFI135', 'SOCIAL9'];
+  function clearSnapshot() {
+    removeKey(snapKey());
+    state.pendingSnapshot = null;
+    updateResumeAffordance();
+  }
 
-function handleTerminalEnter(event) {
-    if (event.key === 'Enter') {
-        executeTerminalCommand();
-    }
-}
+  function validSnapshot(snap) {
+    return !!(
+      snap &&
+      typeof snap === 'object' &&
+      snap.v === 1 &&
+      typeof snap.team === 'string' &&
+      snap.team.length > 0 &&
+      Array.isArray(snap.per) &&
+      enigmas.length > 0
+    );
+  }
 
-function executeTerminalCommand() {
-    const command = document.getElementById('terminalCommand').value.toUpperCase();
-    const output = document.getElementById('terminalOutput');
-    
-    if (requiredCodes.includes(command) && !enteredCodes.includes(command)) {
-        enteredCodes.push(command);
-        output.innerHTML += `<p class="success">✅ Code ${command} accepté (${enteredCodes.length}/5)</p>`;
-        
-        if (enteredCodes.length === 5) {
-            output.innerHTML += `<p class="text-orange">🧮 Tous les codes reçus ! Calcul du code maître...</p>`;
-            document.getElementById('algorithmSection').classList.remove('hidden');
-        }
-    } else if (enteredCodes.includes(command)) {
-        output.innerHTML += `<p class="text-orange">⚠️ Code ${command} déjà utilisé</p>`;
-    } else {
-        output.innerHTML += `<p class="error">❌ Code ${command} rejeté</p>`;
-        Game.addAttempt();
-    }
-    
-    document.getElementById('terminalCommand').value = '';
-    output.scrollTop = output.scrollHeight;
-}
+  function loadSnapshotRaw() {
+    var snap = readJSON(snapKey(), null);
+    return validSnapshot(snap) ? snap : null;
+  }
 
-function validateEnigma6() {
-    const masterCode = document.getElementById('masterCode').value;
-    const isCorrect = Enigmas.checkAnswer(6, masterCode);
-    
-    if (isCorrect && enteredCodes.length === 5) {
-        showNotification('🎊 MISSION ACCOMPLIE ! Attaque neutralisée !', 'success');
-        Game.solveEnigma(6);
-        setTimeout(() => showVictory(), 2000);
-    } else {
-        showNotification('❌ Code maître incorrect !', 'error');
-        Game.addAttempt();
-    }
-}
+  function updateResumeAffordance() {
+    var has = !!loadSnapshotRaw();
+    if (dom.resumeBtn) dom.resumeBtn.hidden = !(has && state.phase === 'welcome');
+    return has;
+  }
 
-// ===== SYSTÈME D'AIDE =====
-function getHint(enigmaId) {
-    const hints = {
-        1: "💡 Décodez chaque nombre en lettre : 12=L, 15=O, 7=G, 9=I, 14=N, puis regardez les chiffres qui restent...",
-        2: "💡 Vérifiez : les fautes d'orthographe dans les domaines, les URLs suspectes (.tk), les demandes urgentes",
-        3: "💡 Placez les pièces dans l'ordre : coin supérieur gauche, puis droite, puis ligne du bas...",
-        4: "💡 Attention aux réseaux : CAMPUS-SECU (faux nom), TP-LINK_DEFAULT (mot de passe par défaut), wifi_gratuit (nom générique)",
-        5: "💡 Combinez : ville de naissance + nom de l'animal + année d'adoption",
-        6: "💡 Additionnez tous les chiffres des codes précédents : 2024+3+7+135+9 = ?"
+  function buildLive() {
+    var total = enigmas.length;
+    var status = 'playing';
+    if (state.phase === 'paused') status = 'paused';
+    else if (state.phase === 'finished') status = state.resultStatus || 'won';
+    return {
+      team: state.team,
+      key: state.teamKey,
+      scenario: scenarioKey,
+      current: total ? Math.min(total, state.current + 1) : 0,
+      solved: resolvedCount(),
+      score: state.score,
+      attempts: sumAttempts(),
+      hints: sumHints(),
+      elapsed: Math.max(0, Math.min(TOTAL_TIME, Math.floor(elapsedSeconds()))),
+      totalTime: TOTAL_TIME,
+      status: status,
+      updatedAt: Date.now()
     };
-    
-    showNotification(hints[enigmaId] || "💡 Continuez à chercher !", 'info', 5000);
-    Game.useHint();
-}
+  }
+
+  function syncLive() {
+    if (!state.teamKey || state.phase === 'welcome') return;
+    var live = buildLive();
+    var all = readJSON(NS + 'live', {});
+    if (!all || typeof all !== 'object' || Array.isArray(all)) all = {};
+    all[state.teamKey] = live;
+    writeJSON(NS + 'live', all);
+    state.lastLive = Date.now();
+    bcast({ type: 'live', team: live });
+  }
+
+  function writeResult() {
+    if (!state.teamKey) return;
+    var record = {
+      team: state.team,
+      key: state.teamKey,
+      scenario: scenarioKey,
+      score: state.score,
+      solved: resolvedCount(),
+      elapsed: Math.max(0, Math.min(TOTAL_TIME, Math.floor(state.elapsedBefore))),
+      status: state.resultStatus || 'won',
+      finishedAt: Date.now()
+    };
+    var list = readJSON(NS + 'results', []);
+    if (!Array.isArray(list)) list = [];
+    list = list.filter(function (item) {
+      return !(item && item.key === record.key);
+    });
+    list.unshift(record);
+    if (list.length > 300) list = list.slice(0, 300);
+    writeJSON(NS + 'results', list);
+    bcast({ type: 'results', result: record });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 渲染：浏览器标题 / 欢迎屏 / HUD / 索引
+   * ------------------------------------------------------------------ */
+  function applyDocumentMeta() {
+    var mode = scenario ? I18N.pick(scenario.title) : '';
+    document.title = mode || I18N.t('page.title');
+  }
+
+  function renderWelcome() {
+    if (!scenario || !dom.welcomeTitle) return;
+    setText(dom.welcomeCode, scenario.code || '—');
+    setText(dom.welcomeTitle, I18N.pick(scenario.title) || I18N.t('site.name'));
+    setText(dom.welcomeBrief, I18N.pick(scenario.briefing) || '');
+    setText(dom.welcomeLabel, I18N.pick(scenario.label) || '—');
+    setText(dom.welcomeDifficulty, I18N.t('game.difficulty', { n: scenario.difficulty || 1 }));
+    setText(dom.welcomeStages, I18N.t('game.meta.stagesCount', { n: enigmas.length }));
+    setText(
+      dom.welcomeMode,
+      (scenario.code ? scenario.code + ' · ' : '') + (I18N.pick(scenario.label) || '—')
+    );
+    setText(dom.welcomeStageCount, I18N.t('game.meta.stagesCount', { n: enigmas.length }));
+    setText(dom.welcomeDuration, I18N.t('game.meta.duration'));
+    renderDataState();
+    updateResumeAffordance();
+  }
+
+  function renderDataState() {
+    var hasData = enigmas.length > 0;
+    var hasProblem = !hasData || missingKeys.length > 0;
+    show(dom.dataEmpty, hasProblem);
+    if (hasProblem) {
+      var body = '';
+      if (missingKeys.length) {
+        body = I18N.t('game.empty.body', { n: missingKeys.length, keys: missingKeys.join(', ') });
+      } else if (!configFound) {
+        body = I18N.t('game.empty.config');
+      } else {
+        body = I18N.t('game.empty.body', { n: 0, keys: '—' });
+      }
+      setText(dom.dataEmptyBody, body);
+    }
+    if (dom.startBtn) dom.startBtn.disabled = !hasData;
+    if (dom.teamInput) dom.teamInput.disabled = !hasData;
+  }
+
+  function buildProgressSegments() {
+    if (!dom.hudProgress) return;
+    clear(dom.hudProgress);
+    enigmas.forEach(function () {
+      var seg = document.createElement('span');
+      seg.className = 'g-hud__seg';
+      seg.setAttribute('data-state', 'todo');
+      seg.setAttribute('aria-hidden', 'true');
+      dom.hudProgress.appendChild(seg);
+    });
+  }
+
+  function updateClock() {
+    if (!dom.hudTimer) return;
+    var remaining = remainingSeconds();
+    var text = I18N.fmtTime(remaining);
+    setText(dom.hudTimer, text);
+    if (remaining < 300) dom.hudTimer.setAttribute('data-tone', 'alert');
+    else if (remaining < 600) dom.hudTimer.setAttribute('data-tone', 'warn');
+    else dom.hudTimer.removeAttribute('data-tone');
+    dom.hudTimer.setAttribute('aria-label', I18N.t('game.a11y.timer', { time: text }));
+  }
+
+  function renderHud() {
+    if (!dom.hud) return;
+    var total = enigmas.length;
+    setText(
+      dom.hudMode,
+      scenario ? (scenario.code ? scenario.code + ' · ' : '') + (I18N.pick(scenario.label) || '—') : '—'
+    );
+    setText(dom.hudTeam, state.team || '—');
+    setText(dom.hudScore, String(state.score));
+    updateClock();
+    var stageNo = total ? Math.min(total, state.current + 1) : 0;
+    setText(dom.hudStageLabel, I18N.t('game.hud.stage', { n: stageNo, total: total }));
+    if (dom.hudProgress) {
+      dom.hudProgress.setAttribute(
+        'aria-label',
+        I18N.t('game.a11y.progress', { done: resolvedCount(), total: total })
+      );
+      var segments = dom.hudProgress.children;
+      for (var i = 0; i < segments.length; i++) {
+        var per = state.per[i];
+        var segState = per && per.resolved ? 'done' : i === state.current ? 'current' : 'todo';
+        segments[i].setAttribute('data-state', segState);
+      }
+    }
+  }
+
+  function buildIndex() {
+    if (!dom.indexList) return;
+    clear(dom.indexList);
+    enigmas.forEach(function (enigma, index) {
+      var item = document.createElement('li');
+      item.className = 'g-index__item';
+      item.setAttribute('data-state', 'todo');
+      var number = document.createElement('span');
+      number.className = 'g-index__n';
+      number.textContent = pad2(index + 1);
+      var title = document.createElement('span');
+      title.className = 'g-index__t';
+      var status = document.createElement('span');
+      status.className = 'g-index__s';
+      item.appendChild(number);
+      item.appendChild(title);
+      item.appendChild(status);
+      dom.indexList.appendChild(item);
+    });
+  }
+
+  function renderIndex() {
+    if (!dom.indexList) return;
+    var items = dom.indexList.children;
+    for (var i = 0; i < items.length; i++) {
+      var enigma = enigmas[i];
+      var per = state.per[i] || freshPerEntry();
+      var item = items[i];
+      var title = item.querySelector('.g-index__t');
+      var status = item.querySelector('.g-index__s');
+      setText(title, enigmaTitle(enigma));
+      if (per.resolved) {
+        item.setAttribute('data-state', 'done');
+        setText(status, I18N.t('game.index.done'));
+      } else if (i === state.current) {
+        item.setAttribute('data-state', 'current');
+        setText(status, I18N.t('game.index.current'));
+      } else {
+        item.setAttribute('data-state', 'todo');
+        setText(status, I18N.t('game.index.todo'));
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 渲染：关卡
+   * ------------------------------------------------------------------ */
+  function renderFeedback() {
+    if (!dom.feedback) return;
+    var feedback = state.feedback;
+    if (!feedback) {
+      show(dom.feedback, false);
+      dom.feedback.removeAttribute('data-tone');
+      return;
+    }
+    show(dom.feedback, true);
+    dom.feedback.setAttribute('data-tone', feedback.tone || 'info');
+    setText(dom.feedback, I18N.t(feedback.key, feedback.vars || {}));
+  }
+
+  function renderHints(hints, shown) {
+    if (!dom.hints) return;
+    if (dom.hints.children.length !== shown) {
+      clear(dom.hints);
+      for (var i = 0; i < shown; i++) {
+        var item = document.createElement('li');
+        var number = document.createElement('span');
+        number.className = 'mono g-hints__n';
+        number.textContent = pad2(i + 1);
+        var body = document.createElement('span');
+        body.textContent = hints[i] == null ? '' : String(hints[i]);
+        item.appendChild(number);
+        item.appendChild(body);
+        dom.hints.appendChild(item);
+      }
+    } else {
+      for (var j = 0; j < shown; j++) {
+        var node = dom.hints.children[j];
+        if (node && node.lastChild) node.lastChild.textContent = hints[j] == null ? '' : String(hints[j]);
+      }
+    }
+  }
+
+  function renderSolved() {
+    var enigma = currentEnigma();
+    var per = state.per[state.current];
+    var visible = !!(enigma && per && per.resolved);
+    show(dom.solvedPanel, visible);
+    if (!visible) return;
+    setText(dom.solvedStamp, I18N.t(per.revealed ? 'game.enigma.revealed' : 'game.enigma.solved'));
+    dom.solvedStamp.className = 'stamp ' + (per.revealed ? 'stamp--warn' : 'stamp--ok');
+    setText(dom.solvedAnswer, I18N.t('game.enigma.answerIs', { answer: answerDisplay(enigma) }));
+    var explain = I18N.pick(enigma.explain);
+    if (explain) dom.solvedBody.innerHTML = explain;
+    else clear(dom.solvedBody);
+  }
+
+  function renderEnigma(options) {
+    options = options || {};
+    var enigma = currentEnigma();
+    if (!enigma || !dom.enigmaCard) return;
+    var index = state.current;
+    var per = state.per[index] || (state.per[index] = freshPerEntry());
+    var total = enigmas.length;
+
+    setText(dom.enigmaCode, enigma.code || 'EN-' + pad2(index + 1));
+    setText(dom.enigmaTag, enigmaTag(enigma));
+    show(dom.enigmaTag, !!enigmaTag(enigma));
+    setText(dom.enigmaCount, I18N.t('game.enigma.count', { n: pad2(index + 1), total: pad2(total) }));
+    setText(dom.enigmaTitle, enigmaTitle(enigma));
+    setText(dom.enigmaBrief, I18N.pick(enigma.brief) || '');
+    dom.enigmaContent.innerHTML = I18N.pick(enigma.content) || '';
+
+    show(dom.answerArea, !per.resolved);
+    dom.answerInput.disabled = per.resolved;
+    dom.submitBtn.disabled = per.resolved;
+    dom.answerInput.value = per.draft || '';
+    dom.answerInput.removeAttribute('data-state');
+    var note = I18N.pick(enigma.answerNote);
+    setText(dom.answerNote, note || '');
+    show(dom.answerNote, !!note);
+    setText(dom.attemptsLabel, I18N.t('game.enigma.attempts', { n: per.attempts, max: MAX_ATTEMPTS }));
+
+    var hints = enigmaHints(enigma);
+    var shownHints = Math.min(per.hints, hints.length);
+    renderHints(hints, shownHints);
+    var hintMax = Math.min(MAX_HINTS, hints.length);
+    setText(dom.hintsCount, I18N.t('game.enigma.hintsCount', { n: shownHints, max: hintMax }));
+    dom.hintBtn.disabled =
+      per.resolved || !!state.autoTimer || shownHints >= hints.length || hints.length === 0;
+    dom.hintBtn.setAttribute('aria-pressed', shownHints > 0 ? 'true' : 'false');
+    dom.hintBtn.setAttribute('aria-expanded', shownHints > 0 ? 'true' : 'false');
+
+    if (per.resolved) {
+      show(dom.enigmaState, true);
+      setText(dom.enigmaState, I18N.t(per.revealed ? 'game.enigma.revealed' : 'game.enigma.solved'));
+      dom.enigmaState.className = 'stamp ' + (per.revealed ? 'stamp--warn' : 'stamp--ok');
+    } else {
+      show(dom.enigmaState, false);
+    }
+
+    renderSolved();
+    renderFeedback();
+    setText(dom.autoNote, state.autoTimer ? I18N.t('game.enigma.advancing') : '');
+
+    dom.prevBtn.disabled = index <= 0;
+    dom.nextBtn.disabled = !per.resolved;
+
+    if (options.focus) {
+      try {
+        dom.enigmaTitle.focus();
+      } catch (e) {
+        /* ignore */
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 渲染：结束屏与弹层内容
+   * ------------------------------------------------------------------ */
+  function renderFinish() {
+    if (!dom.finishTitle) return;
+    var total = enigmas.length;
+    var status = state.resultStatus || 'won';
+    var isTimeout = status === 'timeout';
+    setText(dom.finishTitle, I18N.t(isTimeout ? 'game.finish.timeout' : 'game.finish.won'));
+    dom.finishStamp.className = 'stamp ' + (isTimeout ? 'stamp--alert' : 'stamp--ok');
+    setText(dom.finishStamp, I18N.t(isTimeout ? 'status.timeout' : 'status.won'));
+    setText(dom.statSolved, resolvedCount() + ' / ' + total);
+    setText(dom.statScore, String(state.score));
+    setText(dom.statTime, I18N.fmtTime(state.elapsedBefore));
+    setText(dom.statStatus, I18N.t('status.' + status));
+    setText(dom.reportId, (scenario && scenario.code ? scenario.code : scenarioKey) + ' · ' + state.team);
+
+    clear(dom.reportBody);
+    enigmas.forEach(function (enigma, index) {
+      var per = state.per[index] || freshPerEntry();
+      var row = document.createElement('tr');
+
+      var stageCell = document.createElement('td');
+      var code = document.createElement('span');
+      code.className = 'mono';
+      code.textContent = enigma.code || 'EN-' + pad2(index + 1);
+      stageCell.appendChild(code);
+      stageCell.appendChild(document.createTextNode(' ' + enigmaTitle(enigma)));
+
+      var resultCell = document.createElement('td');
+      if (per.resolved) {
+        setText(resultCell, I18N.t(per.revealed ? 'game.finish.result.revealed' : 'game.finish.result.solved'));
+      } else {
+        setText(resultCell, I18N.t('game.finish.result.missed'));
+      }
+
+      var scoreCell = document.createElement('td');
+      setText(scoreCell, per.resolved && !per.revealed ? String(per.score) : '—');
+
+      row.appendChild(stageCell);
+      row.appendChild(resultCell);
+      row.appendChild(scoreCell);
+      dom.reportBody.appendChild(row);
+    });
+  }
+
+  function renderResumeMeta(snap) {
+    snap = snap || state.pendingSnapshot || loadSnapshotRaw();
+    if (!snap || !dom.resumeMeta) return;
+    var total = enigmas.length;
+    var index = Math.max(0, Math.min(total - 1, Number(snap.current) || 0));
+    setText(
+      dom.resumeMeta,
+      I18N.t('game.resume.meta', {
+        team: snap.team || '—',
+        n: index + 1,
+        total: total,
+        time: I18N.fmtTime(Number(snap.elapsed) || 0)
+      })
+    );
+  }
+
+  function renderPauseMeta(fromAdmin) {
+    if (!dom.pauseMeta) return;
+    if (fromAdmin == null) fromAdmin = state.pausedByAdmin;
+    if (fromAdmin) {
+      setText(dom.pauseMeta, I18N.t('game.pause.admin'));
+      return;
+    }
+    var total = enigmas.length;
+    var stageNo = total ? Math.min(total, state.current + 1) : 0;
+    setText(
+      dom.pauseMeta,
+      (state.team || '—') +
+        ' · ' +
+        I18N.t('game.hud.stage', { n: stageNo, total: total }) +
+        ' · ' +
+        I18N.fmtTime(elapsedSeconds())
+    );
+  }
+
+  function renderTimeoutMeta() {
+    if (!dom.timeoutMeta) return;
+    setText(
+      dom.timeoutMeta,
+      I18N.t('game.timeout.summary', {
+        solved: resolvedCount(),
+        total: enigmas.length,
+        score: state.score
+      })
+    );
+  }
+
+  function renderSolutions() {
+    if (!dom.solutionsBody) return;
+    clear(dom.solutionsBody);
+    if (!enigmas.length) {
+      setText(dom.solutionsBody, I18N.t('game.solutions.empty'));
+      return;
+    }
+    enigmas.forEach(function (enigma, index) {
+      var per = state.per[index] || freshPerEntry();
+      var wrap = document.createElement('div');
+      wrap.className = 'g-solution';
+
+      var head = document.createElement('div');
+      head.className = 'g-solution__head';
+      var code = document.createElement('span');
+      code.className = 'mono';
+      code.textContent = enigma.code || 'EN-' + pad2(index + 1);
+      var title = document.createElement('span');
+      title.className = 'g-solution__title';
+      title.textContent = enigmaTitle(enigma);
+      var stamp = document.createElement('span');
+      if (per.resolved) {
+        stamp.className = 'stamp ' + (per.revealed ? 'stamp--warn' : 'stamp--ok');
+        stamp.textContent = I18N.t(per.revealed ? 'game.finish.result.revealed' : 'game.finish.result.solved');
+      } else {
+        stamp.className = 'stamp';
+        stamp.textContent = I18N.t('game.finish.result.missed');
+      }
+      head.appendChild(code);
+      head.appendChild(title);
+      head.appendChild(stamp);
+      wrap.appendChild(head);
+
+      var answer = document.createElement('p');
+      answer.className = 'g-solution__answer';
+      answer.textContent = I18N.t('game.solutions.answer') + ' · ' + answerDisplay(enigma);
+      wrap.appendChild(answer);
+
+      var explain = I18N.pick(enigma.explain);
+      if (explain) {
+        var body = document.createElement('p');
+        body.className = 'g-solution__explain';
+        body.textContent = explain;
+        wrap.appendChild(body);
+      }
+      dom.solutionsBody.appendChild(wrap);
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 视图切换
+   * ------------------------------------------------------------------ */
+  function showView(name) {
+    state.view = name;
+    show(dom.viewWelcome, name === 'welcome');
+    show(dom.viewStage, name === 'stage');
+    show(dom.viewFinish, name === 'finish');
+    try {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    } catch (e) {
+      window.scrollTo(0, 0);
+    }
+    syncHeadOffset();
+  }
+
+  function syncHeadOffset() {
+    var head = document.querySelector('.site-head');
+    if (!head) return;
+    var height = Math.round(head.getBoundingClientRect().height);
+    if (height > 0) document.documentElement.style.setProperty('--g-head-h', height + 'px');
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 队伍错误提示
+   * ------------------------------------------------------------------ */
+  function showTeamError(message) {
+    if (!dom.teamError) return;
+    setText(dom.teamError, message);
+    show(dom.teamError, true);
+    dom.teamInput.setAttribute('aria-invalid', 'true');
+  }
+
+  function hideTeamError() {
+    if (!dom.teamError) return;
+    show(dom.teamError, false);
+    dom.teamInput.removeAttribute('aria-invalid');
+  }
+
+  function initialTeam() {
+    var fromUrl = '';
+    try {
+      var params = new window.URLSearchParams(window.location.search);
+      fromUrl = params.get('team') || '';
+    } catch (e) {
+      fromUrl = '';
+    }
+    var team = String(fromUrl || readRaw(NS + 'lastTeam', '') || '')
+      .trim()
+      .slice(0, 20);
+    return team;
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 自动进入下一关
+   * ------------------------------------------------------------------ */
+  function clearAdvance() {
+    if (state.autoTimer) {
+      window.clearTimeout(state.autoTimer);
+      state.autoTimer = null;
+    }
+  }
+
+  function scheduleAdvance(delay) {
+    clearAdvance();
+    state.pendingAdvance = false;
+    state.autoTimer = window.setTimeout(function () {
+      state.autoTimer = null;
+      advanceAfterResolve();
+    }, delay);
+    setText(dom.autoNote, I18N.t('game.enigma.advancing'));
+  }
+
+  function advanceAfterResolve() {
+    if (state.phase !== 'playing' && state.phase !== 'paused') return;
+    setText(dom.autoNote, '');
+    if (allResolved()) {
+      finishGame('won');
+      return;
+    }
+    var next = -1;
+    for (var i = state.current + 1; i < enigmas.length; i++) {
+      if (!state.per[i].resolved) {
+        next = i;
+        break;
+      }
+    }
+    if (next < 0) {
+      for (var j = 0; j < enigmas.length; j++) {
+        if (!state.per[j].resolved) {
+          next = j;
+          break;
+        }
+      }
+    }
+    if (next < 0) {
+      finishGame('won');
+      return;
+    }
+    goTo(next, true);
+  }
+
+  function goTo(index, focus) {
+    if (index < 0 || index >= enigmas.length) return;
+    clearAdvance();
+    state.pendingAdvance = false;
+    state.current = index;
+    state.feedback = null;
+    setText(dom.autoNote, '');
+    renderEnigma({ focus: !!focus });
+    renderHud();
+    renderIndex();
+    saveSnapshot();
+    syncLive();
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 开始 / 暂停 / 继续 / 结束 / 重开
+   * ------------------------------------------------------------------ */
+  function startGame(rawTeam) {
+    var team = String(rawTeam == null ? '' : rawTeam).trim().slice(0, 20);
+    if (!team) {
+      showTeamError(I18N.t('game.team.required'));
+      dom.teamInput.focus();
+      return;
+    }
+    if (!enigmas.length) {
+      toast(I18N.t('game.empty.title'), 'warn');
+      return;
+    }
+    hideTeamError();
+    state.team = team;
+    state.teamKey = teamKeyOf(team);
+    state.phase = 'playing';
+    state.resultStatus = '';
+    state.current = 0;
+    state.per = enigmas.map(freshPerEntry);
+    state.score = 0;
+    state.feedback = null;
+    state.elapsedBefore = 0;
+    state.startedAt = Date.now();
+    state.pendingAdvance = false;
+    clearAdvance();
+    dom.teamInput.value = team;
+    writeRaw(NS + 'lastTeam', team);
+    showView('stage');
+    renderHud();
+    renderIndex();
+    renderEnigma({ focus: true });
+    startClock();
+    saveSnapshot();
+    syncLive();
+    toast(I18N.t('game.toast.started'), 'ok');
+  }
+
+  function computeScore(per) {
+    var points =
+      BASE_SCORE +
+      remainingSeconds() * SECONDS_BONUS -
+      (Number(per.attempts) || 0) * ATTEMPT_PENALTY -
+      (Number(per.hints) || 0) * HINT_PENALTY;
+    return Math.max(0, Math.round(points));
+  }
+
+  function submitAnswer() {
+    if (state.phase !== 'playing' || state.autoTimer) return;
+    var enigma = currentEnigma();
+    var per = state.per[state.current];
+    if (!enigma || !per || per.resolved) return;
+    var raw = dom.answerInput.value;
+    if (!String(raw == null ? '' : raw).trim()) {
+      toast(I18N.t('game.feedback.empty'), 'warn');
+      dom.answerInput.focus();
+      return;
+    }
+
+    if (isCorrectAnswer(enigma, raw)) {
+      per.resolved = true;
+      per.score = computeScore(per);
+      state.score += per.score;
+      state.feedback = { tone: 'ok', key: 'game.feedback.correct', vars: { points: per.score } };
+      renderEnigma();
+      renderHud();
+      renderIndex();
+      saveSnapshot();
+      syncLive();
+      scheduleAdvance(AUTO_NEXT_DELAY);
+      return;
+    }
+
+    per.attempts += 1;
+    per.draft = String(raw);
+    if (per.attempts >= MAX_ATTEMPTS) {
+      per.resolved = true;
+      per.revealed = true;
+      per.score = 0;
+      state.feedback = {
+        tone: 'bad',
+        key: 'game.feedback.revealed',
+        vars: { answer: answerDisplay(enigma) }
+      };
+      renderEnigma();
+      renderHud();
+      renderIndex();
+      saveSnapshot();
+      syncLive();
+      scheduleAdvance(AUTO_REVEAL_DELAY);
+      return;
+    }
+
+    state.feedback = {
+      tone: 'bad',
+      key: 'game.feedback.wrong',
+      vars: { left: MAX_ATTEMPTS - per.attempts }
+    };
+    dom.answerInput.setAttribute('data-state', 'bad');
+    setText(dom.attemptsLabel, I18N.t('game.enigma.attempts', { n: per.attempts, max: MAX_ATTEMPTS }));
+    renderFeedback();
+    dom.answerInput.focus();
+    try {
+      dom.answerInput.select();
+    } catch (e) {
+      /* ignore */
+    }
+    saveSnapshot();
+    syncLive();
+  }
+
+  function useHint() {
+    if (state.phase !== 'playing' || state.autoTimer) return;
+    var enigma = currentEnigma();
+    var per = state.per[state.current];
+    if (!enigma || !per || per.resolved) return;
+    var hints = enigmaHints(enigma);
+    if (!hints.length) return;
+    if (per.hints >= MAX_HINTS || per.hints >= hints.length) return;
+    per.hints += 1;
+    state.feedback = { tone: 'info', key: 'game.feedback.hint', vars: { n: per.hints } };
+    renderEnigma();
+    saveSnapshot();
+    syncLive();
+  }
+
+  function pauseGame(fromAdmin) {
+    if (state.phase !== 'playing') return;
+    stopClock();
+    state.phase = 'paused';
+    state.pausedByAdmin = !!fromAdmin;
+    if (state.autoTimer) {
+      clearAdvance();
+      state.pendingAdvance = true;
+    }
+    setText(dom.autoNote, '');
+    updateClock();
+    renderHud();
+    renderPauseMeta(!!fromAdmin);
+    openModal('modalPause', resumeGame);
+    saveSnapshot();
+    syncLive();
+  }
+
+  function resumeGame() {
+    if (state.phase !== 'paused') return;
+    state.phase = 'playing';
+    state.pausedByAdmin = false;
+    startClock();
+    renderHud();
+    if (state.pendingAdvance) {
+      state.pendingAdvance = false;
+      scheduleAdvance(AUTO_NEXT_DELAY);
+    }
+    saveSnapshot();
+    syncLive();
+  }
+
+  function finishGame(status) {
+    if (state.phase === 'finished') return;
+    clearAdvance();
+    state.pendingAdvance = false;
+    stopClock();
+    state.elapsedBefore = Math.max(0, Math.min(TOTAL_TIME, state.elapsedBefore));
+    state.phase = 'finished';
+    state.resultStatus = status;
+    updateClock();
+    showView('finish');
+    renderFinish();
+    renderHud();
+    syncLive();
+    writeResult();
+    clearSnapshot();
+    updateResumeAffordance();
+    if (status === 'timeout') {
+      renderTimeoutMeta();
+      openModal('modalTimeout');
+    }
+  }
+
+  function resetRuntime() {
+    clearAdvance();
+    state.pendingAdvance = false;
+    state.phase = 'welcome';
+    state.view = 'welcome';
+    state.team = '';
+    state.teamKey = '';
+    state.current = 0;
+    state.per = enigmas.map(freshPerEntry);
+    state.score = 0;
+    state.elapsedBefore = 0;
+    state.startedAt = 0;
+    state.resultStatus = '';
+    state.pausedByAdmin = false;
+    state.feedback = null;
+    closeAllModals();
+    hideTeamError();
+  }
+
+  function restartToWelcome() {
+    clearSnapshot();
+    resetRuntime();
+    dom.teamInput.value = initialTeam();
+    showView('welcome');
+    renderWelcome();
+    renderHud();
+    renderIndex();
+    renderEnigma();
+    updateResumeAffordance();
+  }
+
+  function resetByAdmin() {
+    clearSnapshot();
+    resetRuntime();
+    dom.teamInput.value = initialTeam();
+    showView('welcome');
+    renderWelcome();
+    renderHud();
+    renderIndex();
+    renderEnigma();
+    updateResumeAffordance();
+    toast(I18N.t('game.toast.reset'), 'warn');
+  }
+
+  function continueSnapshot() {
+    var snap = state.pendingSnapshot || loadSnapshotRaw();
+    if (!snap) {
+      closeModal('modalResume', { silent: true });
+      return;
+    }
+    state.team = String(snap.team || '')
+      .trim()
+      .slice(0, 20);
+    if (!state.team) state.team = I18N.t('game.team.label');
+    state.teamKey = snap.teamKey ? String(snap.teamKey) : teamKeyOf(state.team);
+    state.score = Math.max(0, Number(snap.score) || 0);
+    state.current = Math.max(0, Math.min(enigmas.length - 1, Number(snap.current) || 0));
+    state.per = enigmas.map(function (enigma, index) {
+      var saved = Array.isArray(snap.per) ? snap.per[index] : null;
+      var per = freshPerEntry();
+      if (saved && typeof saved === 'object') {
+        per.attempts = Math.max(0, Math.min(MAX_ATTEMPTS, Number(saved.attempts) || 0));
+        per.hints = Math.max(0, Math.min(MAX_HINTS, Number(saved.hints) || 0));
+        per.resolved = !!saved.resolved;
+        per.revealed = !!saved.revealed;
+        per.score = Math.max(0, Number(saved.score) || 0);
+        per.draft = typeof saved.draft === 'string' ? saved.draft : '';
+      }
+      return per;
+    });
+    state.feedback = null;
+    state.elapsedBefore = Math.max(0, Math.min(TOTAL_TIME - 1, Number(snap.elapsed) || 0));
+    state.phase = 'playing';
+    state.resultStatus = '';
+    state.startedAt = Date.now();
+    clearAdvance();
+    state.pendingAdvance = false;
+    closeModal('modalResume', { silent: true });
+    dom.teamInput.value = state.team;
+    hideTeamError();
+
+    if (allResolved()) {
+      finishGame('won');
+      return;
+    }
+    showView('stage');
+    renderHud();
+    renderIndex();
+    renderEnigma({ focus: true });
+    saveSnapshot();
+    syncLive();
+    toast(I18N.t('game.toast.resumedGame'), 'ok');
+  }
+
+  function restartFromResume() {
+    clearSnapshot();
+    closeModal('modalResume', { silent: true });
+    state.pendingSnapshot = null;
+    hideTeamError();
+    showView('welcome');
+    renderWelcome();
+    updateResumeAffordance();
+  }
+
+  function openSolutions() {
+    renderSolutions();
+    openModal('modalSolutions');
+  }
+
+  function checkPendingSnapshot() {
+    var snap = loadSnapshotRaw();
+    if (!snap) {
+      updateResumeAffordance();
+      return;
+    }
+    state.pendingSnapshot = snap;
+    renderResumeMeta(snap);
+    updateResumeAffordance();
+    openModal('modalResume');
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 计时器主循环
+   * ------------------------------------------------------------------ */
+  function tick() {
+    if (state.phase !== 'playing') return;
+    updateClock();
+    if (remainingSeconds() <= 0) {
+      finishGame('timeout');
+      return;
+    }
+    if (Date.now() - state.lastLive >= LIVE_SYNC_MS) {
+      syncLive();
+      saveSnapshot();
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 语言切换：动态内容整体重绘
+   * ------------------------------------------------------------------ */
+  function handleLanguageChange() {
+    applyDocumentMeta();
+    renderWelcome();
+    renderHud();
+    renderIndex();
+    renderEnigma();
+    renderFinish();
+    renderResumeMeta();
+    if (state.phase === 'paused' && dom.modalPause && !dom.modalPause.hidden) renderPauseMeta();
+    if (dom.timeoutMeta) renderTimeoutMeta();
+    if (dom.modalSolutions && !dom.modalSolutions.hidden) renderSolutions();
+    syncHeadOffset();
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 事件绑定
+   * ------------------------------------------------------------------ */
+  function bindEvents() {
+    if (dom.teamForm) {
+      dom.teamForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        startGame(dom.teamInput.value);
+      });
+    }
+    if (dom.teamInput) dom.teamInput.addEventListener('input', hideTeamError);
+    if (dom.resumeBtn) {
+      dom.resumeBtn.addEventListener('click', function () {
+        var snap = loadSnapshotRaw();
+        if (!snap) {
+          updateResumeAffordance();
+          return;
+        }
+        state.pendingSnapshot = snap;
+        continueSnapshot();
+      });
+    }
+    if (dom.resumeContinue) dom.resumeContinue.addEventListener('click', continueSnapshot);
+    if (dom.resumeRestart) dom.resumeRestart.addEventListener('click', restartFromResume);
+
+    if (dom.answerForm) {
+      dom.answerForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        submitAnswer();
+      });
+    }
+    if (dom.answerInput) {
+      dom.answerInput.addEventListener('input', function () {
+        var per = state.per[state.current];
+        if (per) per.draft = dom.answerInput.value;
+        if (dom.answerInput.getAttribute('data-state')) dom.answerInput.removeAttribute('data-state');
+      });
+    }
+    if (dom.hintBtn) dom.hintBtn.addEventListener('click', useHint);
+    if (dom.prevBtn) {
+      dom.prevBtn.addEventListener('click', function () {
+        goTo(state.current - 1, true);
+      });
+    }
+    if (dom.nextBtn) {
+      dom.nextBtn.addEventListener('click', function () {
+        var per = state.per[state.current];
+        if (!per || !per.resolved) return;
+        var next = state.current + 1;
+        if (next < enigmas.length) goTo(next, true);
+        else if (allResolved()) finishGame('won');
+      });
+    }
+    if (dom.pauseBtn) {
+      dom.pauseBtn.addEventListener('click', function () {
+        if (state.phase === 'playing') pauseGame(false);
+      });
+    }
+    if (dom.pauseResume) {
+      dom.pauseResume.addEventListener('click', function () {
+        closeModal('modalPause');
+      });
+    }
+    if (dom.againBtn) dom.againBtn.addEventListener('click', restartToWelcome);
+    if (dom.timeoutAgain) dom.timeoutAgain.addEventListener('click', restartToWelcome);
+    if (dom.solutionsBtn) dom.solutionsBtn.addEventListener('click', openSolutions);
+    if (dom.timeoutSolutions) dom.timeoutSolutions.addEventListener('click', openSolutions);
+
+    toArray(document.querySelectorAll('[data-close]')).forEach(function (button) {
+      button.addEventListener('click', function () {
+        closeModal(button.getAttribute('data-close'));
+      });
+    });
+
+    toArray(document.querySelectorAll('.modal')).forEach(function (modal) {
+      modal.addEventListener('click', function (event) {
+        if (event.target === modal) closeModal(modal);
+      });
+    });
+
+    window.addEventListener('resize', syncHeadOffset);
+    if (typeof window.ResizeObserver === 'function') {
+      var head = document.querySelector('.site-head');
+      if (head) {
+        try {
+          new window.ResizeObserver(syncHeadOffset).observe(head);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    }
+
+    window.addEventListener('pagehide', function () {
+      if (state.phase === 'playing' || state.phase === 'paused') saveSnapshot();
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 初始化
+   * ------------------------------------------------------------------ */
+  function init() {
+    if (!I18N) {
+      if (window.console && window.console.error) window.console.error('[game] I18N 未加载');
+      return;
+    }
+    cacheDom();
+    scenario = resolveScenario();
+    resolveEnigmas();
+    bindEvents();
+    setupBroadcast();
+
+    if (!I18N.mounted) {
+      try {
+        I18N.mountSwitchers(document);
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    I18N.apply(document);
+    applyDocumentMeta();
+
+    buildIndex();
+    buildProgressSegments();
+    if (dom.teamInput) dom.teamInput.value = initialTeam();
+    hideTeamError();
+
+    showView('welcome');
+    renderWelcome();
+    renderHud();
+    renderIndex();
+    renderEnigma();
+    renderFinish();
+    renderSolutions();
+
+    I18N.onChange(handleLanguageChange);
+
+    /* i18n 引擎可能把 boot 推迟到 DOMContentLoaded，会在其后重刷一遍静态文案
+       （包括 <title>）。这里在启动完成后补一次动态标题与静态标记，保证标题正确。 */
+    var resyncAfterBoot = function () {
+      try {
+        I18N.apply(document);
+      } catch (e) {
+        /* ignore */
+      }
+      applyDocumentMeta();
+      syncHeadOffset();
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', resyncAfterBoot, { once: true });
+    } else {
+      window.setTimeout(resyncAfterBoot, 0);
+    }
+
+    syncHeadOffset();
+    checkPendingSnapshot();
+    window.setInterval(tick, 1000);
+
+    if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+      document.fonts.ready.then(syncHeadOffset).catch(function () {});
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})(window, document);

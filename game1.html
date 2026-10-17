@@ -1,780 +1,1215 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="zh-CN" data-scenario="classic">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Escape Game - Operation Digital Lockdown</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="page.title">数字封锁行动 · 开始行动</title>
+  <meta name="description" content="" data-i18n-attr="content:page.desc">
+  <meta name="theme-color" content="#f2f5fd">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <!-- 字体：霞鹜文楷本地子集（按本站字符裁剪，无外部 CDN 依赖） -->
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    /* ==========================================================
+       游戏页（game / game1 / game2 共用）专属布局
+       只使用 css/theme.css 的令牌与组件；方形、细线、留白。
+       ========================================================== */
+    [hidden] {
+      display: none !important;
+    }
 
-        body {
-            font-family: 'Courier New', monospace;
-            background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e);
-            color: #00ff00;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+    :root {
+      --g-head-h: var(--head-h);
+      --g-line: 1px solid var(--line);
+    }
 
-        .matrix-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            opacity: 0.1;
-            z-index: -1;
-        }
+    /* ---------- 欢迎屏 ---------- */
+    .g-welcome {
+      padding-top: clamp(26px, 3.8vw, 54px);
+      padding-bottom: clamp(24px, 3vw, 44px);
+    }
 
-        .header {
-            background: rgba(0, 255, 0, 0.1);
-            border-bottom: 2px solid #00ff00;
-            padding: 15px;
-            text-align: center;
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-        }
+    .g-welcome__grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      gap: clamp(26px, 3.6vw, 60px);
+      align-items: start;
+    }
 
-        .timer {
-            font-size: 24px;
-            color: #ff0040;
-            font-weight: bold;
-            margin: 10px 0;
-        }
+    .g-kicker {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: clamp(14px, 1.8vw, 22px);
+      color: var(--ink-44);
+    }
 
-        .progress-bar {
-            background: #333;
-            height: 8px;
-            border-radius: 4px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
+    .g-kicker::before {
+      content: '';
+      flex: none;
+      width: 8px;
+      height: 8px;
+      background: var(--brand);
+    }
 
-        .progress-fill {
-            background: linear-gradient(90deg, #00ff00, #40ff40);
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s;
-        }
+    .g-kicker__code {
+      margin-left: auto;
+      color: var(--brand);
+      letter-spacing: 0.22em;
+    }
 
-        .main-content {
-            margin-top: 140px;
-            padding: 20px;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+    .g-welcome__title {
+      font-size: var(--t-h1);
+      max-width: 20ch;
+      text-wrap: balance;
+    }
 
-        .welcome-screen {
-            text-align: center;
-            background: rgba(0, 255, 0, 0.05);
-            border: 2px solid #00ff00;
-            border-radius: 10px;
-            padding: 30px;
-            margin: 20px 0;
-        }
+    .g-welcome__brief {
+      margin-top: clamp(14px, 1.8vw, 22px);
+    }
 
-        .team-input {
-            margin: 20px 0;
-        }
+    .g-welcome__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      margin-top: clamp(18px, 2.2vw, 28px);
+    }
 
-        .team-input input {
-            background: #000;
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            padding: 15px;
-            font-size: 18px;
-            font-family: 'Courier New', monospace;
-            border-radius: 5px;
-            width: 100%;
-            max-width: 300px;
-        }
+    .g-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px 42px;
+      margin-top: clamp(20px, 2.6vw, 32px);
+      padding-top: clamp(14px, 1.8vw, 20px);
+      border-top: var(--g-line);
+    }
 
-        .btn {
-            background: #00ff00;
-            color: #000;
-            border: none;
-            padding: 15px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: 'Courier New', monospace;
-            transition: all 0.3s;
-            margin: 10px;
-        }
+    .g-meta__item {
+      display: grid;
+      gap: 2px;
+    }
 
-        .btn:hover {
-            background: #40ff40;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 255, 0, 0.3);
-        }
+    .g-meta__k {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-44);
+    }
 
-        .btn:disabled {
-            background: #666;
-            cursor: not-allowed;
-            transform: none;
-        }
+    .g-meta__v {
+      font-family: var(--font-display);
+      font-size: clamp(18px, 1.7vw, 24px);
+      line-height: 1.2;
+      color: var(--ink);
+    }
 
-        .enigma-container {
-            display: none;
-            background: rgba(0, 255, 0, 0.05);
-            border: 2px solid #00ff00;
-            border-radius: 10px;
-            padding: 30px;
-            margin: 20px 0;
-        }
+    .g-rules {
+      padding: 0;
+    }
 
-        .enigma-container.active {
-            display: block;
-            animation: slideIn 0.5s;
-        }
+    .g-rules__head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 17px;
+      border-bottom: var(--g-line);
+      color: var(--ink-44);
+    }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    .g-rules__id {
+      color: var(--brand);
+      letter-spacing: 0.18em;
+    }
 
-        .enigma-title {
-            font-size: 24px;
-            margin-bottom: 15px;
-            text-align: center;
-            color: #ff6600;
-        }
+    .g-rules__list {
+      display: grid;
+    }
 
-        .enigma-description {
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
+    .g-rules__list li {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
+      padding: 14px 17px;
+      border-bottom: 1px solid var(--line-soft);
+      font-size: var(--t-small);
+      line-height: 1.75;
+      color: var(--ink-62);
+    }
 
-        .enigma-content {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #333;
-            border-radius: 5px;
-            padding: 20px;
-            margin: 15px 0;
-        }
+    .g-rules__list li:last-child {
+      border-bottom: 0;
+    }
 
-        .answer-input {
-            width: 100%;
-            background: #000;
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            padding: 12px;
-            font-size: 16px;
-            font-family: 'Courier New', monospace;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
+    .g-rules__n {
+      color: var(--brand);
+      padding-top: 2px;
+    }
 
-        .hint-section {
-            background: rgba(255, 255, 0, 0.1);
-            border: 1px solid #ffff00;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 15px 0;
-            display: none;
-        }
+    .g-startbar {
+      margin-top: clamp(26px, 3.4vw, 48px);
+      padding-top: clamp(18px, 2.4vw, 30px);
+      border-top: 1px solid var(--line-strong);
+      display: grid;
+      grid-template-columns: minmax(0, 620px) minmax(0, 1fr);
+      gap: 20px 40px;
+      align-items: start;
+    }
 
-        .hint-section.show {
-            display: block;
-        }
+    .g-startbar__form {
+      display: flex;
+      align-items: flex-end;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
 
-        .score-display {
-            text-align: center;
-            font-size: 18px;
-            margin: 15px 0;
-        }
+    .g-startbar__field {
+      flex: 1 1 260px;
+    }
 
-        .navigation {
-            text-align: center;
-            margin: 30px 0;
-        }
+    .g-startbar__btn {
+      flex: none;
+    }
 
-        .success-screen {
-            display: none;
-            text-align: center;
-            background: rgba(0, 255, 0, 0.1);
-            border: 2px solid #00ff00;
-            border-radius: 10px;
-            padding: 40px;
-            margin: 20px 0;
-        }
+    .g-error {
+      margin: 8px 0 0;
+      font-family: var(--font-mono);
+      font-size: var(--t-mono);
+      letter-spacing: 0.08em;
+      line-height: 1.6;
+      color: var(--alert);
+    }
 
-        .error-message {
-            color: #ff0040;
-            background: rgba(255, 0, 64, 0.1);
-            border: 1px solid #ff0040;
-            border-radius: 5px;
-            padding: 10px;
-            margin: 10px 0;
-            display: none;
-        }
+    .g-empty {
+      grid-column: 1 / -1;
+      text-align: left;
+    }
 
-        .attempts {
-            font-size: 14px;
-            color: #ffff00;
-            margin: 5px 0;
-        }
+    .g-empty p + p {
+      margin-top: 8px;
+      font-family: var(--font-sans);
+      font-size: var(--t-small);
+      letter-spacing: 0;
+      line-height: 1.8;
+    }
 
-        @media (max-width: 768px) {
-            .header {
-                padding: 10px;
-            }
-            
-            .timer {
-                font-size: 20px;
-            }
-            
-            .main-content {
-                margin-top: 120px;
-                padding: 15px;
-            }
-            
-            .enigma-container {
-                padding: 20px;
-            }
-        }
-    </style>
+    /* ---------- 顶部 HUD ---------- */
+    .g-stage {
+      padding-bottom: clamp(16px, 2.4vw, 30px);
+    }
+
+    .g-hud {
+      position: sticky;
+      top: var(--g-head-h, var(--head-h));
+      z-index: 90;
+      border-top: var(--g-line);
+      border-bottom: var(--g-line);
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+    }
+
+    .g-hud__inner {
+      display: flex;
+      align-items: center;
+      gap: clamp(14px, 2.2vw, 34px);
+      flex-wrap: wrap;
+      padding-block: 10px;
+    }
+
+    .g-hud__cell {
+      display: grid;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .g-hud__k {
+      color: var(--ink-44);
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      line-height: 1.6;
+    }
+
+    .g-hud__v {
+      font-family: var(--font-mono);
+      font-size: var(--t-small);
+      letter-spacing: 0.06em;
+      line-height: 1.4;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .g-hud__cell--team {
+      max-width: 20ch;
+    }
+
+    .g-hud__clock {
+      font-size: clamp(20px, 2vw, 26px);
+      line-height: 1.1;
+      letter-spacing: 0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .g-hud__clock[data-tone='warn'] {
+      color: var(--warn);
+    }
+
+    .g-hud__clock[data-tone='alert'] {
+      color: var(--alert);
+      animation: g-clock-pulse 2.4s var(--ease-inout) infinite;
+    }
+
+    @keyframes g-clock-pulse {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.55;
+      }
+    }
+
+    .g-hud__cell--stage {
+      margin-left: auto;
+    }
+
+    .g-hud__progress {
+      display: flex;
+      gap: 3px;
+      margin-top: 6px;
+    }
+
+    .g-hud__seg {
+      width: clamp(16px, 2.4vw, 30px);
+      height: 5px;
+      background: var(--surface-3);
+      border: 1px solid var(--line);
+    }
+
+    .g-hud__seg[data-state='done'] {
+      background: var(--brand);
+      border-color: var(--brand);
+    }
+
+    .g-hud__seg[data-state='current'] {
+      background: var(--brand-soft);
+      border-color: var(--brand-line);
+    }
+
+    .g-hud__pause {
+      flex: none;
+    }
+
+    /* ---------- 关卡视图 ---------- */
+    .g-stage__body {
+      padding-top: clamp(22px, 2.8vw, 38px);
+    }
+
+    .g-stage__grid {
+      display: grid;
+      grid-template-columns: 232px minmax(0, 1fr);
+      gap: clamp(20px, 3vw, 46px);
+      align-items: start;
+    }
+
+    .g-index {
+      position: sticky;
+      top: calc(var(--g-head-h, var(--head-h)) + 112px);
+      min-width: 0;
+    }
+
+    .g-index__title {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: var(--g-line);
+      color: var(--ink-44);
+    }
+
+    .g-index__list {
+      display: grid;
+    }
+
+    .g-index__item {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding: 10px 0 10px 12px;
+      border-left: 2px solid transparent;
+      border-bottom: 1px solid var(--line-soft);
+      font-size: var(--t-small);
+      color: var(--ink-44);
+      min-width: 0;
+    }
+
+    .g-index__n {
+      font-family: var(--font-mono);
+      font-size: var(--t-mono);
+      letter-spacing: 0.12em;
+      color: var(--ink-28);
+    }
+
+    .g-index__t {
+      flex: 1 1 0%;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .g-index__s {
+      flex: none;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-28);
+    }
+
+    .g-index__item[data-state='done'] {
+      border-left-color: var(--brand-line);
+      color: var(--ink-62);
+    }
+
+    .g-index__item[data-state='done'] .g-index__s {
+      color: var(--brand);
+    }
+
+    .g-index__item[data-state='current'] {
+      border-left-color: var(--brand);
+      background: var(--brand-wash);
+      color: var(--ink);
+    }
+
+    .g-index__item[data-state='current'] .g-index__s {
+      color: var(--brand);
+    }
+
+    /* ---------- 关卡图版 ---------- */
+    .g-enigma {
+      padding: 0;
+      scroll-margin-top: calc(var(--g-head-h, var(--head-h)) + 110px);
+    }
+
+    .g-enigma__head {
+      padding: clamp(20px, 2.6vw, 34px) clamp(20px, 3vw, 40px) 0;
+    }
+
+    .g-enigma__meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-bottom: 12px;
+      border-bottom: var(--g-line);
+    }
+
+    .g-enigma__code {
+      color: var(--brand);
+      letter-spacing: 0.2em;
+    }
+
+    .g-enigma__count {
+      margin-left: auto;
+      color: var(--ink-44);
+    }
+
+    .g-enigma__title {
+      margin-top: clamp(16px, 2vw, 24px);
+      font-size: clamp(28px, 3.4vw, 44px);
+      line-height: 1.16;
+      max-width: 26ch;
+      text-wrap: balance;
+    }
+
+    .g-enigma__title:focus-visible {
+      outline-offset: 6px;
+    }
+
+    .g-enigma__brief {
+      margin-top: 12px;
+    }
+
+    .g-enigma__content {
+      padding: clamp(16px, 2.2vw, 24px) clamp(20px, 3vw, 40px) 0;
+      overflow-wrap: anywhere;
+    }
+
+    .g-enigma__work {
+      padding: clamp(16px, 2.2vw, 26px) clamp(20px, 3vw, 40px) 0;
+    }
+
+    .g-answer__row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+
+    .g-answer__row .input {
+      flex: 1 1 240px;
+      min-width: 0;
+    }
+
+    .g-answer__submit {
+      flex: none;
+    }
+
+    .g-answer__meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px 20px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .g-answer__note,
+    .g-answer__attempts {
+      font-size: var(--t-small);
+      line-height: 1.6;
+      color: var(--ink-44);
+    }
+
+    .g-answer__attempts {
+      white-space: nowrap;
+      letter-spacing: 0.1em;
+    }
+
+    .g-tools {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .g-tools__cost {
+      color: var(--warn);
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+    }
+
+    .g-tools__count {
+      color: var(--ink-44);
+      letter-spacing: 0.12em;
+    }
+
+    .g-hints {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .g-hints:empty {
+      display: none;
+    }
+
+    .g-hints li {
+      padding: 11px 14px;
+      border-left: 2px solid var(--brand-line);
+      background: var(--brand-wash);
+      font-size: var(--t-small);
+      line-height: 1.8;
+      color: var(--ink-62);
+    }
+
+    .g-hints__n {
+      margin-right: 8px;
+      color: var(--brand);
+      letter-spacing: 0.14em;
+    }
+
+    .g-feedback {
+      margin: 18px clamp(20px, 3vw, 40px) 0;
+      padding: 12px 16px;
+      border: var(--g-line);
+      border-left: 2px solid var(--brand);
+      background: var(--brand-wash);
+      font-size: var(--t-small);
+      line-height: 1.75;
+      color: var(--ink-80);
+    }
+
+    .g-feedback[data-tone='ok'] {
+      border-left-color: var(--ok);
+      background: var(--ok-soft);
+    }
+
+    .g-feedback[data-tone='bad'] {
+      border-left-color: var(--alert);
+      background: var(--alert-soft);
+    }
+
+    .g-feedback strong {
+      font-weight: 400;
+      color: var(--ink);
+    }
+
+    .g-solved {
+      margin: 18px clamp(20px, 3vw, 40px) 0;
+      padding: clamp(16px, 2vw, 22px);
+      border: var(--g-line);
+      background: var(--surface-2);
+    }
+
+    .g-solved__head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .g-solved__answer {
+      color: var(--ink);
+      font-size: var(--t-small);
+      letter-spacing: 0.06em;
+      overflow-wrap: anywhere;
+    }
+
+    .g-solved__body {
+      color: var(--ink-62);
+    }
+
+    .g-solved__body p {
+      font-size: var(--t-small);
+      line-height: 1.85;
+    }
+
+    .g-enigma__foot {
+      padding: 12px 17px;
+      border-top: var(--g-line);
+    }
+
+    .g-enigma__auto {
+      flex: 1 1 auto;
+      text-align: center;
+      color: var(--ink-44);
+      letter-spacing: 0.1em;
+      text-transform: none;
+    }
+
+    /* ---------- 结束屏 ---------- */
+    .g-finish {
+      padding-top: clamp(28px, 4vw, 56px);
+      padding-bottom: clamp(20px, 3vw, 40px);
+    }
+
+    .g-finish__eyebrow {
+      margin-bottom: 12px;
+    }
+
+    .g-finish__head {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding-bottom: clamp(16px, 2vw, 24px);
+      border-bottom: var(--g-line);
+    }
+
+    .g-finish__title {
+      font-size: var(--t-h1);
+    }
+
+    .g-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin: clamp(22px, 3vw, 38px) 0;
+      border-top: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .g-stat {
+      display: grid;
+      gap: 4px;
+      padding: 18px 20px;
+      border-right: var(--g-line);
+      min-width: 0;
+    }
+
+    .g-stat:last-child {
+      border-right: 0;
+    }
+
+    .g-stat__k {
+      color: var(--ink-44);
+    }
+
+    .g-stat__v {
+      font-family: var(--font-display);
+      font-size: clamp(24px, 2.6vw, 36px);
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .g-report {
+      padding: 0;
+    }
+
+    .g-report__table {
+      margin: 0;
+    }
+
+    .g-report__table th:last-child,
+    .g-report__table td:last-child {
+      text-align: right;
+    }
+
+    .g-report__foot {
+      padding: 12px 17px;
+      border-top: var(--g-line);
+    }
+
+    .g-report__note {
+      font-size: var(--t-small);
+      line-height: 1.7;
+    }
+
+    .g-finish__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: clamp(22px, 2.8vw, 34px);
+    }
+
+    /* ---------- 弹层补充 ---------- */
+    .g-modal-meta {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: var(--g-line);
+      color: var(--ink-44);
+      line-height: 1.8;
+    }
+
+    .g-solutions__intro {
+      margin-bottom: 4px;
+      font-size: var(--t-small);
+    }
+
+    .g-solutions {
+      display: grid;
+      margin-top: 10px;
+    }
+
+    .g-solution {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .g-solution:last-child {
+      border-bottom: 0;
+    }
+
+    .g-solution__head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .g-solution__title {
+      font-family: var(--font-display);
+      font-size: var(--t-h3);
+      line-height: 1.35;
+    }
+
+    .g-solution__answer {
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: var(--t-small);
+      letter-spacing: 0.06em;
+      color: var(--brand-deep);
+      overflow-wrap: anywhere;
+    }
+
+    .g-solution__explain {
+      margin-top: 8px;
+      font-size: var(--t-small);
+      line-height: 1.85;
+      color: var(--ink-62);
+    }
+
+    /* ---------- 响应式 ---------- */
+    @media (max-width: 1080px) {
+      .g-hud__cell--time {
+        margin-left: 0;
+      }
+
+      .g-hud__cell--stage {
+        margin-left: auto;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .g-welcome__grid {
+        grid-template-columns: 1fr;
+      }
+
+      .g-stage__grid {
+        grid-template-columns: 1fr;
+      }
+
+      .g-index {
+        display: none;
+      }
+
+      .g-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .g-stat:nth-child(2) {
+        border-right: 0;
+      }
+
+      .g-stat:nth-child(1),
+      .g-stat:nth-child(2) {
+        border-bottom: var(--g-line);
+      }
+    }
+
+    @media (max-width: 760px) {
+      .g-hud__inner {
+        gap: 8px 20px;
+        padding-block: 9px;
+      }
+
+      .g-hud__cell--team {
+        display: none;
+      }
+
+      .g-hud__cell--stage {
+        order: 6;
+        width: 100%;
+        margin-left: 0;
+      }
+
+      .g-hud__progress {
+        width: 100%;
+      }
+
+      .g-hud__seg {
+        flex: 1 1 auto;
+        width: auto;
+      }
+
+      .g-hud__pause {
+        margin-left: auto;
+      }
+
+      .g-startbar {
+        grid-template-columns: 1fr;
+      }
+
+      .g-startbar__form {
+        display: grid;
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .g-startbar__btn {
+        width: 100%;
+      }
+
+      .g-answer__submit {
+        width: 100%;
+      }
+
+      .g-enigma__count {
+        margin-left: 0;
+      }
+
+      .g-enigma__foot {
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-start;
+      }
+
+      .g-enigma__auto {
+        order: 3;
+        flex: 1 1 100%;
+        text-align: left;
+      }
+
+      .g-stat {
+        padding: 14px 16px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .g-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .g-stat {
+        border-right: 0;
+        border-bottom: var(--g-line);
+      }
+
+      .g-stat:nth-child(3) {
+        border-bottom: 0;
+      }
+
+      .g-finish__actions .btn {
+        flex: 1 1 auto;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="matrix-bg" id="matrixBg"></div>
-    
-    <div class="header">
-        <h1>🚨 CYBER ESCAPE GAME 🚨</h1>
-        <div class="timer" id="timer">30:00</div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
-        </div>
-        <div class="score-display">
-            Score: <span id="currentScore">0</span> | 
-            Équipe: <span id="teamDisplay">---</span> |
-            Énigme: <span id="currentEnigma">0</span>/6
-        </div>
-    </div>
+  <a class="skip" href="#main" data-i18n="a11y.skip">跳到主要内容</a>
 
-    <div class="main-content">
-        <!-- Écran d'accueil -->
-        <div class="welcome-screen" id="welcomeScreen">
-            <h2>🎮 OPERATION DIGITAL LOCKDOWN</h2>
-            <p>⚠️ ALERTE SÉCURITÉ - NIVEAU ROUGE ⚠️</p>
-            <br>
-            <p>Une cyberattaque massive est en cours sur notre réseau universitaire !</p>
-            <p><strong>Temps avant verrouillage total : 30 minutes</strong></p>
-            <p>Votre mission : résoudre 6 énigmes pour neutraliser l'attaque</p>
-            <br>
-            
-            <div class="team-input">
-                <input type="text" id="teamNameInput" placeholder="Nom de votre équipe (ex: TEAM01)" maxlength="20">
+  <header class="site-head">
+    <div class="shell site-head__inner">
+      <a class="brand" href="index.html" aria-label="数字封锁行动">
+        <span class="brand__seal" aria-hidden="true">封</span>
+        <span class="brand__text">
+          <span class="brand__name" data-i18n="site.name">数字封锁行动</span>
+          <span class="brand__sub mono">OPERATION DIGITAL LOCKDOWN</span>
+        </span>
+      </a>
+      <nav class="site-nav" aria-label="主导航">
+        <a class="rowlink" href="index.html" data-i18n="nav.home">行动首页</a>
+        <a class="rowlink" href="game.html" data-i18n="nav.game" aria-current="page">开始行动</a>
+        <a class="rowlink" href="admin.html" data-i18n="nav.admin">教师控制台</a>
+        <a class="rowlink" href="qr_generator.html" data-i18n="nav.qr">队伍二维码</a>
+      </nav>
+      <div class="langswitch" data-lang-switch data-i18n-attr="aria-label:a11y.langSwitch" aria-label="切换语言"></div>
+    </div>
+  </header>
+
+  <main id="main" class="page-enter">
+    <!-- ========== 欢迎屏 ========== -->
+    <section class="section g-welcome" id="viewWelcome">
+      <div class="shell">
+        <div class="g-welcome__grid">
+          <div class="g-welcome__lead">
+            <p class="g-kicker mono">
+              <span data-i18n="game.kicker">行动档案</span>
+              <span class="g-kicker__code" id="welcomeCode">OP-00</span>
+            </p>
+            <h1 class="display g-welcome__title" id="welcomeTitle">数字封锁行动</h1>
+            <p class="lede g-welcome__brief" id="welcomeBrief"></p>
+            <div class="g-welcome__tags">
+              <span class="stamp stamp--brand" id="welcomeLabel">行动模式</span>
+              <span class="stamp" id="welcomeDifficulty">难度</span>
+              <span class="stamp" id="welcomeStages">关卡</span>
             </div>
-            
-            <button class="btn" onclick="startGame()">🚀 COMMENCER LA MISSION</button>
+            <div class="g-meta">
+              <div class="g-meta__item">
+                <span class="g-meta__k" data-i18n="game.hud.mode">行动模式</span>
+                <span class="g-meta__v" id="welcomeMode">—</span>
+              </div>
+              <div class="g-meta__item">
+                <span class="g-meta__k" data-i18n="game.meta.stages">关卡数</span>
+                <span class="g-meta__v" id="welcomeStageCount">—</span>
+              </div>
+              <div class="g-meta__item">
+                <span class="g-meta__k" data-i18n="game.meta.limit">限时</span>
+                <span class="g-meta__v" id="welcomeDuration">—</span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="g-welcome__side">
+            <div class="plate plate--flat g-rules">
+              <div class="g-rules__head">
+                <span class="mono" data-i18n="game.rules.title">行动规则</span>
+                <span class="mono g-rules__id">R-01</span>
+              </div>
+              <ol class="g-rules__list">
+                <li><span class="g-rules__n mono">01</span><span data-i18n="game.rules.1">限时 30 分钟，完成全部六道关卡。</span></li>
+                <li><span class="g-rules__n mono">02</span><span data-i18n="game.rules.2">答对得分，答错与提示会扣分。</span></li>
+                <li><span class="g-rules__n mono">03</span><span data-i18n="game.rules.3">每关最多 3 条提示；答错 5 次自动揭晓。</span></li>
+                <li><span class="g-rules__n mono">04</span><span data-i18n="game.rules.4">中途刷新可继续上次行动。</span></li>
+              </ol>
+            </div>
+          </aside>
         </div>
 
-        <!-- Container pour les énigmes -->
-        <div id="enigmasContainer">
-            <!-- Les énigmes seront générées dynamiquement -->
+        <div class="g-startbar">
+          <form class="g-startbar__form" id="teamForm" novalidate>
+            <div class="field g-startbar__field">
+              <label for="teamInput" data-i18n="game.team.label">队伍名称</label>
+              <input class="input" id="teamInput" name="team" type="text" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="输入队名" data-i18n-attr="placeholder:game.team.placeholder">
+              <p class="g-error" id="teamError" role="alert" hidden></p>
+            </div>
+            <button class="btn g-startbar__btn" type="submit" id="startBtn">
+              <span data-i18n="game.start">开始行动</span>
+              <span class="arw" data-dir="e" aria-hidden="true">→</span>
+            </button>
+            <button class="btn btn--ghost g-startbar__btn" type="button" id="resumeBtn" hidden data-i18n="game.resume.continue">继续上次行动</button>
+          </form>
+          <div class="empty g-empty" id="dataEmpty" hidden>
+            <p><strong data-i18n="game.empty.title">关卡数据暂未就绪</strong></p>
+            <p id="dataEmptyBody"></p>
+          </div>
         </div>
+      </div>
+    </section>
 
-        <!-- Écran de victoire -->
-        <div class="success-screen" id="successScreen">
-            <h2>🎉 MISSION ACCOMPLIE ! 🎉</h2>
-            <p>Félicitations ! Vous avez neutralisé la cyberattaque !</p>
-            <p>L'université est sauvée grâce à votre expertise en cybersécurité.</p>
-            <div id="finalScore"></div>
-            <div id="finalTime"></div>
-            <button class="btn" onclick="showSolutions()">📚 VOIR LES SOLUTIONS</button>
+    <!-- ========== 关卡视图 ========== -->
+    <section class="g-stage" id="viewStage" hidden>
+      <div class="g-hud" id="hud">
+        <div class="shell g-hud__inner">
+          <div class="g-hud__cell">
+            <span class="g-hud__k mono" data-i18n="game.hud.mode">行动模式</span>
+            <span class="g-hud__v" id="hudMode">—</span>
+          </div>
+          <div class="g-hud__cell g-hud__cell--team">
+            <span class="g-hud__k mono" data-i18n="game.hud.team">队伍</span>
+            <span class="g-hud__v" id="hudTeam">—</span>
+          </div>
+          <div class="g-hud__cell g-hud__cell--time">
+            <span class="g-hud__k mono" data-i18n="game.hud.time">剩余时间</span>
+            <span class="g-hud__v mono g-hud__clock" id="hudTimer" role="timer" aria-live="off">30:00</span>
+          </div>
+          <div class="g-hud__cell">
+            <span class="g-hud__k mono" data-i18n="game.hud.score">得分</span>
+            <span class="g-hud__v" id="hudScore">0</span>
+          </div>
+          <div class="g-hud__cell g-hud__cell--stage">
+            <span class="g-hud__k mono" id="hudStageLabel">第 1 / 6 关</span>
+            <span class="g-hud__progress" id="hudProgress" role="img" aria-label=""></span>
+          </div>
+          <button class="btn btn--ghost btn--sm g-hud__pause" type="button" id="pauseBtn">
+            <span data-i18n="game.hud.pause">暂停</span>
+          </button>
         </div>
-    </div>
+      </div>
 
-    <script>
-        // Configuration du jeu
-        const GAME_CONFIG = {
-            timeLimit: 30 * 60, // 30 minutes en secondes
-            totalEnigmas: 6,
-            scoreSystem: {
-                baseScore: 100,
-                timeBonus: 2,
-                hintPenalty: 20,
-                attemptPenalty: 10
-            }
-        };
+      <div class="shell g-stage__body">
+        <div class="g-stage__grid">
+          <aside class="g-index" aria-labelledby="indexTitle">
+            <p class="mono g-index__title" id="indexTitle" data-i18n="game.index.title">关卡索引</p>
+            <ol class="g-index__list" id="indexList"></ol>
+          </aside>
 
-        // État du jeu
-        let gameState = {
-            teamName: '',
-            currentEnigma: 0,
-            score: 0,
-            timeRemaining: GAME_CONFIG.timeLimit,
-            gameStarted: false,
-            gameCompleted: false,
-            attempts: {},
-            hintsUsed: {},
-            startTime: null
-        };
+          <div class="g-stage__main">
+            <article class="plate plate-corners g-enigma" id="enigmaCard" aria-labelledby="enigmaTitle">
+              <span class="corner" aria-hidden="true"></span>
 
-        // Timer du jeu
-        let gameTimer;
-
-        // Données des énigmes
-        const ENIGMAS = [
-            {
-                id: 1,
-                title: "🔐 MOT DE PASSE COMPROMIS",
-                description: "Les hackers ont intercepté un mot de passe chiffré utilisé par l'administrateur système. Décodez-le pour accéder au système !",
-                content: `
-                    <p><strong>Message intercepté du responsable IT :</strong></p>
-                    <div style="font-size: 14px; background: rgba(0,0,0,0.5); padding: 15px; border: 1px solid #333; margin: 15px 0;">
-                        "J'ai changé le mot de passe comme convenu. J'ai utilisé notre méthode habituelle avec
-                        les numéros que tu connais. Le nouveau code d'accès est : <strong style="color: #ff6600;">12-15-7-9-14</strong>
-                        Comme toujours, on ajoute l'année en cours à la fin pour plus de sécurité."
-                    </div>
-                    <p><strong>⚠️ Votre mission :</strong> Déchiffrez ce mot de passe pour accéder au système de sécurité.</p>
-                `,
-                answer: "LOGIN2024",
-                hints: [
-                    "💡 Position dans l'alphabet : A=1, B=2, C=3... Z=26",
-                    "💡 Décodage : 12=L, 15=O, 7=G, 9=I, 14=N",
-                    "💡 N'oubliez pas d'ajouter l'année 2024 à la fin du mot"
-                ]
-            },
-            {
-                id: 2,
-                title: "📧 DÉTECTION DE PHISHING",
-                description: "L'équipe de sécurité a intercepté plusieurs emails suspects. Identifiez les tentatives de phishing pour éviter le piège !",
-                content: `
-                    <p><strong>⚠️ MISSION :</strong> Analysez ces emails et identifiez lesquels sont des tentatives de phishing.</p>
-                    <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,0,0.1); border: 1px solid #ffff00;">
-                        <strong>📝 FORMAT DE RÉPONSE ATTENDU :</strong> Numéros des emails suspects séparés par des virgules<br>
-                        <em>Exemple : 1,3,5 (sans espaces)</em>
-                    </div>
-                    <div style="margin: 15px 0;">
-                        <strong>Email #1:</strong> De: securite@bank-creditt-agricol.com - Objet: "Vérifiez votre compte URGENT"<br>
-                        <strong>Email #2:</strong> De: notifications@paypal.com - Objet: "Récapitulatif mensuel"<br>
-                        <strong>Email #3:</strong> De: support@amazone-livraison.tk - Objet: "Problème avec votre commande"<br>
-                        <strong>Email #4:</strong> De: admin@university-campus.edu - Objet: "Maintenance programmée"<br>
-                        <strong>Email #5:</strong> De: security@microsoft.com - Objet: "Alerte sécurité Office 365"<br>
-                        <strong>Email #6:</strong> De: noreply@googIe-security.ml - Objet: "Activité suspecte détectée"
-                    </div>
-                    <p><strong>🔍 Indices à rechercher :</strong> Fautes d'orthographe, domaines suspects, extensions inhabituelles...</p>
-                `,
-                answer: "1,3,6",
-                hints: [
-                    "💡 Regardez attentivement les adresses email et les domaines",
-                    "💡 Les extensions .tk et .ml sont souvent utilisées par les fraudeurs",
-                    "💡 'creditt-agricol', 'amazone', 'googIe' (avec un i majuscule) sont des indices de phishing"
-                ]
-            },
-            {
-                id: 3,
-                title: "🔒 DÉCHIFFREMENT QR",
-                description: "Reconstituez le QR code pour obtenir la clé de déchiffrement !",
-                content: `
-                    <p>Le QR code a été fragmenté. Reconstituez-le mentalement et devinez ce qu'il contient :</p>
-                    <div style="text-align: center; margin: 20px;">
-                        <div style="display: inline-block; margin: 10px; padding: 20px; border: 2px solid #00ff00;">
-                            Fragment 1: [█████]<br>
-                            [█ █ █]<br>
-                            [█████]
-                        </div>
-                        <div style="display: inline-block; margin: 10px; padding: 20px; border: 2px solid #00ff00;">
-                            Fragment 2: DE<br>
-                            CR<br>
-                            YP
-                        </div>
-                        <div style="display: inline-block; margin: 10px; padding: 20px; border: 2px solid #00ff00;">
-                            Fragment 3: T7<br>
-                            ##<br>
-                            []
-                        </div>
-                    </div>
-                    <p>Une fois reconstitué, le QR code révèle un code de 8 caractères.</p>
-                `,
-                answer: "DECRYPT7",
-                hints: [
-                    "💡 Les fragments forment un mot anglais + chiffre",
-                    "💡 Fragment 2 donne 'DECRYPT'",
-                    "💡 Fragment 3 donne '7'"
-                ]
-            },
-            {
-                id: 4,
-                title: "🌐 RÉSEAUX WI-FI MALVEILLANTS",
-                description: "Identifiez les réseaux Wi-Fi dangereux !",
-                content: `
-                    <p>Parmi ces réseaux Wi-Fi, lesquels éviteriez-vous ? (Numéros séparés par des virgules)</p>
-                    <div style="margin: 15px 0;">
-                        <strong>Réseau #1:</strong> "Campus-WiFi-Secure" - WPA2, Mot de passe requis<br>
-                        <strong>Réseau #2:</strong> "Eduroam" - WPA2-Enterprise, Authentification<br>
-                        <strong>Réseau #3:</strong> "WiFi-Gratuit" - Ouvert, Aucune sécurité<br>
-                        <strong>Réseau #4:</strong> "Bibliotheque-Etudiant" - WPA2, Mot de passe affiché<br>
-                        <strong>Réseau #5:</strong> "Free-Internet-Fast" - Ouvert, Nom générique<br>
-                        <strong>Réseau #6:</strong> "BBOX-7A2F91" - WPA2, Nom par défaut box<br>
-                        <strong>Réseau #7:</strong> "Campus-IT-Admin" - WPA2, Réseau administrateur<br>
-                        <strong>Réseau #8:</strong> "Linksys" - WEP, Configuration par défaut
-                    </div>
-                `,
-                answer: "3,5,8",
-                hints: [
-                    "💡 Évitez les réseaux ouverts et les noms trop génériques",
-                    "💡 Le WEP est obsolète et facilement cassé",
-                    "💡 Les configurations par défaut sont dangereuses"
-                ]
-            },
-            {
-                id: 5,
-                title: "💾 RÉCUPÉRATION DE SAUVEGARDE",
-                description: "Trouvez le mot de passe de la sauvegarde d'urgence !",
-                content: `
-                    <p>La sauvegarde est protégée par un mot de passe personnel du responsable IT :</p>
-                    <div style="margin: 20px; padding: 15px; background: #000; border: 1px solid #333;">
-                        <strong>Profil utilisateur :</strong><br>
-                        - Nom : Marcus Johnson<br>
-                        - Ville de naissance : Rome<br>
-                        - Animal préféré : Rex (son chien)<br>
-                        - Année d'embauche : 2018<br>
-                        - Passion : Voyages en Italie
-                    </div>
-                    <p>Le mot de passe suit le pattern classique : [Lieu][Animal][Année]</p>
-                `,
-                answer: "RomeRex2018",
-                hints: [
-                    "💡 Combinez ville de naissance + animal + année d'embauche",
-                    "💡 Rome + Rex + 2018",
-                    "💡 Respectez la casse : première lettre majuscule pour chaque élément"
-                ]
-            },
-            {
-                id: 6,
-                title: "🛡️ CODE MAÎTRE FINAL",
-                description: "Calculez le code de neutralisation de l'attaque !",
-                content: `
-                    <p>Utilisez les codes précédents pour générer le code maître :</p>
-                    <div style="margin: 20px; padding: 15px; background: #000; border: 1px solid #333;">
-                        <strong>Formule de calcul :</strong><br>
-                        - Année LOGIN (2024)<br>
-                        + Nombre d'emails phishing (3)<br>
-                        + Chiffre de DECRYPT (7)<br>
-                        + Nombre de réseaux dangereux (3)<br>
-                        + Somme des chiffres de l'année 2018 (2+0+1+8=11)<br>
-                        = Total à convertir en code
-                    </div>
-                    <p>Le total vous donne un nombre. Ce nombre correspond à un code de neutralisation dans la table ci-dessous :</p>
-                    <div style="margin: 15px; font-size: 12px;">
-                        2048: REVENGE | 2049: SECURE | 2050: DEFEND | 2051: VICTORY
-                    </div>
-                `,
-                answer: "REVENGE",
-                hints: [
-                    "💡 2024 + 3 + 7 + 3 + 11 = ?",
-                    "💡 2024 + 3 + 7 + 3 + 11 = 2048",
-                    "💡 2048 correspond au code REVENGE"
-                ]
-            }
-        ];
-
-        // Initialisation
-        window.onload = function() {
-            initializeGame();
-            createMatrixEffect();
-            
-            // Récupérer le nom d'équipe depuis l'URL si présent
-            const urlParams = new URLSearchParams(window.location.search);
-            const teamFromUrl = urlParams.get('team');
-            if (teamFromUrl) {
-                document.getElementById('teamNameInput').value = teamFromUrl;
-            }
-        };
-
-        function initializeGame() {
-            // Initialiser les attempts et hints pour chaque énigme
-            for (let i = 1; i <= GAME_CONFIG.totalEnigmas; i++) {
-                gameState.attempts[i] = 0;
-                gameState.hintsUsed[i] = 0;
-            }
-            updateDisplay();
-        }
-
-        function createMatrixEffect() {
-            const matrix = document.getElementById('matrixBg');
-            const chars = "01АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-            
-            setInterval(() => {
-                if (Math.random() < 0.1) {
-                    const span = document.createElement('span');
-                    span.textContent = chars[Math.floor(Math.random() * chars.length)];
-                    span.style.position = 'absolute';
-                    span.style.left = Math.random() * 100 + '%';
-                    span.style.top = Math.random() * 100 + '%';
-                    span.style.color = '#00ff00';
-                    span.style.fontSize = '14px';
-                    span.style.opacity = '0.3';
-                    matrix.appendChild(span);
-                    
-                    setTimeout(() => {
-                        if (span.parentNode) {
-                            span.parentNode.removeChild(span);
-                        }
-                    }, 3000);
-                }
-            }, 200);
-        }
-
-        function startGame() {
-            const teamName = document.getElementById('teamNameInput').value.trim();
-            if (!teamName) {
-                alert('Veuillez saisir un nom d\'équipe !');
-                return;
-            }
-            
-            gameState.teamName = teamName;
-            gameState.gameStarted = true;
-            gameState.startTime = Date.now();
-            gameState.currentEnigma = 1;
-            
-            document.getElementById('welcomeScreen').style.display = 'none';
-            startTimer();
-            showEnigma(1);
-            updateDisplay();
-        }
-
-        function startTimer() {
-            gameTimer = setInterval(() => {
-                gameState.timeRemaining--;
-                updateDisplay();
-                
-                if (gameState.timeRemaining <= 0) {
-                    gameOver();
-                }
-            }, 1000);
-        }
-
-        function showEnigma(enigmaId) {
-            const enigma = ENIGMAS[enigmaId - 1];
-            const container = document.getElementById('enigmasContainer');
-            
-            container.innerHTML = `
-                <div class="enigma-container active">
-                    <h2 class="enigma-title">${enigma.title}</h2>
-                    <div class="enigma-description">${enigma.description}</div>
-                    <div class="enigma-content">${enigma.content}</div>
-                    
-                    <div class="attempts" id="attempts-${enigmaId}">
-                        Tentatives: ${gameState.attempts[enigmaId]}/5
-                    </div>
-                    
-                    <div style="margin: 20px 0;">
-                        <input type="text" class="answer-input" id="answer-${enigmaId}" 
-                               placeholder="Votre réponse..." onkeypress="checkEnter(event, ${enigmaId})">
-                        <br>
-                        <button class="btn" onclick="checkAnswer(${enigmaId})">✓ VALIDER</button>
-                        <button class="btn" onclick="showHint(${enigmaId})" 
-                                style="background: #ffaa00;">💡 INDICE (-20 pts)</button>
-                    </div>
-                    
-                    <div class="hint-section" id="hint-${enigmaId}">
-                        <div id="hint-content-${enigmaId}"></div>
-                    </div>
-                    
-                    <div class="error-message" id="error-${enigmaId}"></div>
-                    
-                    <div class="navigation">
-                        ${enigmaId > 1 ? `<button class="btn" onclick="showEnigma(${enigmaId-1})">← Précédent</button>` : ''}
-                        ${enigmaId < GAME_CONFIG.totalEnigmas ? `<button class="btn" onclick="showEnigma(${enigmaId+1})" disabled id="next-${enigmaId}">Suivant →</button>` : ''}
-                    </div>
+              <div class="g-enigma__head">
+                <div class="g-enigma__meta">
+                  <span class="mono g-enigma__code" id="enigmaCode">EN-00</span>
+                  <span class="tag" id="enigmaTag">—</span>
+                  <span class="mono g-enigma__count" id="enigmaCount">01 / 06</span>
+                  <span class="stamp" id="enigmaState" hidden></span>
                 </div>
-            `;
-        }
+                <h2 class="display g-enigma__title" id="enigmaTitle" tabindex="-1">关卡标题</h2>
+                <p class="lede g-enigma__brief" id="enigmaBrief"></p>
+              </div>
 
-        function checkEnter(event, enigmaId) {
-            if (event.key === 'Enter') {
-                checkAnswer(enigmaId);
-            }
-        }
+              <div class="g-enigma__content mission-body" id="enigmaContent"></div>
 
-        function checkAnswer(enigmaId) {
-            const answer = document.getElementById(`answer-${enigmaId}`).value.trim().toUpperCase();
-            const correct = ENIGMAS[enigmaId - 1].answer.toUpperCase();
-            const errorDiv = document.getElementById(`error-${enigmaId}`);
-            
-            if (!answer) {
-                showError(enigmaId, "Veuillez saisir une réponse !");
-                return;
-            }
-            
-            gameState.attempts[enigmaId]++;
-            
-            if (answer === correct) {
-                // Bonne réponse
-                const timeBonus = Math.max(0, gameState.timeRemaining * GAME_CONFIG.scoreSystem.timeBonus);
-                const attemptPenalty = (gameState.attempts[enigmaId] - 1) * GAME_CONFIG.scoreSystem.attemptPenalty;
-                const hintPenalty = gameState.hintsUsed[enigmaId] * GAME_CONFIG.scoreSystem.hintPenalty;
-                
-                const enigmaScore = Math.max(0, GAME_CONFIG.scoreSystem.baseScore + timeBonus - attemptPenalty - hintPenalty);
-                gameState.score += enigmaScore;
-                
-                errorDiv.style.display = 'none';
-                document.getElementById(`answer-${enigmaId}`).style.border = '2px solid #00ff00';
-                
-                // Animation de succès
-                const container = document.querySelector('.enigma-container.active');
-                container.style.background = 'rgba(0, 255, 0, 0.1)';
-                
-                setTimeout(() => {
-                    if (enigmaId < GAME_CONFIG.totalEnigmas) {
-                        gameState.currentEnigma = enigmaId + 1;
-                        showEnigma(enigmaId + 1);
-                    } else {
-                        gameCompleted();
-                    }
-                    updateDisplay();
-                }, 1000);
-                
-            } else {
-                // Mauvaise réponse
-                if (gameState.attempts[enigmaId] >= 5) {
-                    showError(enigmaId, `❌ Maximum de tentatives atteint ! La réponse était: ${ENIGMAS[enigmaId - 1].answer}`);
-                    
-                    setTimeout(() => {
-                        if (enigmaId < GAME_CONFIG.totalEnigmas) {
-                            gameState.currentEnigma = enigmaId + 1;
-                            showEnigma(enigmaId + 1);
-                        } else {
-                            gameCompleted();
-                        }
-                        updateDisplay();
-                    }, 3000);
-                } else {
-                    showError(enigmaId, `❌ Réponse incorrecte ! Il vous reste ${5 - gameState.attempts[enigmaId]} tentatives.`);
-                    document.getElementById(`answer-${enigmaId}`).style.border = '2px solid #ff0040';
-                }
-            }
-            
-            document.getElementById(`attempts-${enigmaId}`).textContent = `Tentatives: ${gameState.attempts[enigmaId]}/5`;
-            updateDisplay();
-        }
+              <div class="g-enigma__work" id="answerArea">
+                <form class="g-answer" id="answerForm" novalidate>
+                  <div class="field g-answer__field">
+                    <label for="answerInput" data-i18n="game.enigma.answer">你的答案</label>
+                    <div class="g-answer__row">
+                      <input class="input" id="answerInput" name="answer" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="answerNote attemptsLabel" placeholder="输入答案" data-i18n-attr="placeholder:game.enigma.placeholder">
+                      <button class="btn g-answer__submit" type="submit" id="submitBtn">
+                        <span data-i18n="game.enigma.verify">验证答案</span>
+                        <span class="arw" data-dir="e" aria-hidden="true">→</span>
+                      </button>
+                    </div>
+                    <div class="g-answer__meta">
+                      <p class="g-answer__note" id="answerNote"></p>
+                      <p class="mono g-answer__attempts" id="attemptsLabel"></p>
+                    </div>
+                  </div>
+                </form>
 
-        function showError(enigmaId, message) {
-            const errorDiv = document.getElementById(`error-${enigmaId}`);
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 4000);
-        }
+                <div class="g-tools">
+                  <button class="btn btn--ghost btn--sm" type="button" id="hintBtn" aria-pressed="false" aria-controls="hints">
+                    <span data-i18n="game.enigma.hint">提示</span>
+                    <span class="g-tools__cost mono" aria-hidden="true" data-i18n="game.enigma.hintCost">本关 −20</span>
+                  </button>
+                  <span class="mono g-tools__count" id="hintsCount"></span>
+                </div>
 
-        function showHint(enigmaId) {
-            if (gameState.hintsUsed[enigmaId] >= ENIGMAS[enigmaId - 1].hints.length) {
-                alert('Plus d\'indices disponibles pour cette énigme !');
-                return;
-            }
-            
-            gameState.hintsUsed[enigmaId]++;
-            gameState.score = Math.max(0, gameState.score - GAME_CONFIG.scoreSystem.hintPenalty);
-            
-            const hint = ENIGMAS[enigmaId - 1].hints[gameState.hintsUsed[enigmaId] - 1];
-            const hintSection = document.getElementById(`hint-${enigmaId}`);
-            const hintContent = document.getElementById(`hint-content-${enigmaId}`);
-            
-            hintContent.innerHTML += `<p><strong>Indice ${gameState.hintsUsed[enigmaId]}:</strong> ${hint}</p>`;
-            hintSection.classList.add('show');
-            
-            updateDisplay();
-        }
+                <ul class="g-hints" id="hints" aria-live="polite"></ul>
+              </div>
 
-        function updateDisplay() {
-            // Timer
-            const minutes = Math.floor(gameState.timeRemaining / 60);
-            const seconds = gameState.timeRemaining % 60;
-            document.getElementById('timer').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            // Progress bar
-            const progress = (gameState.currentEnigma - 1) / GAME_CONFIG.totalEnigmas * 100;
-            document.getElementById('progressFill').style.width = progress + '%';
-            
-            // Score et infos
-            document.getElementById('currentScore').textContent = gameState.score;
-            document.getElementById('teamDisplay').textContent = gameState.teamName;
-            document.getElementById('currentEnigma').textContent = gameState.currentEnigma - 1;
-            
-            // Couleur timer selon urgence
-            const timerElement = document.getElementById('timer');
-            if (gameState.timeRemaining < 300) { // Moins de 5 minutes
-                timerElement.style.color = '#ff0040';
-                timerElement.style.animation = 'blink 1s infinite';
-            } else if (gameState.timeRemaining < 600) { // Moins de 10 minutes
-                timerElement.style.color = '#ff6600';
-            }
-        }
+              <div class="g-feedback" id="feedback" role="status" aria-live="polite" hidden></div>
 
-        function gameCompleted() {
-            clearInterval(gameTimer);
-            gameState.gameCompleted = true;
-            
-            const finalTime = GAME_CONFIG.timeLimit - gameState.timeRemaining;
-            const minutes = Math.floor(finalTime / 60);
-            const seconds = finalTime % 60;
-            
-            document.getElementById('enigmasContainer').style.display = 'none';
-            document.getElementById('successScreen').style.display = 'block';
-            document.getElementById('finalScore').innerHTML = `<h3>Score Final: ${gameState.score} points</h3>`;
-            document.getElementById('finalTime').innerHTML = `<p>Temps écoulé: ${minutes}:${seconds.toString().padStart(2, '0')}</p>`;
-            
-            // Enregistrer le résultat
-            saveGameResult();
-        }
+              <div class="g-solved" id="solvedPanel" hidden>
+                <div class="g-solved__head">
+                  <span class="stamp" id="solvedStamp">已解出</span>
+                  <span class="mono g-solved__answer" id="solvedAnswer"></span>
+                </div>
+                <div class="mission-body g-solved__body" id="solvedBody"></div>
+              </div>
 
-        function gameOver() {
-            clearInterval(gameTimer);
-            alert('⏰ Temps écoulé ! La cyberattaque n\'a pas pu être neutralisée...');
-            showSolutions();
-        }
+              <div class="plate-caption g-enigma__foot">
+                <button class="btn btn--quiet btn--sm" type="button" id="prevBtn">
+                  <span class="arw" data-dir="w" aria-hidden="true">←</span>
+                  <span data-i18n="game.enigma.prev">上一关</span>
+                </button>
+                <span class="mono g-enigma__auto" id="autoNote" aria-live="polite"></span>
+                <button class="btn btn--quiet btn--sm" type="button" id="nextBtn">
+                  <span data-i18n="game.enigma.next">下一关</span>
+                  <span class="arw" data-dir="e" aria-hidden="true">→</span>
+                </button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        function showSolutions() {
-            let solutionsText = "📚 SOLUTIONS DES ÉNIGMES:\n\n";
-            
-            ENIGMAS.forEach((enigma, index) => {
-                solutionsText += `${enigma.title}\n`;
-                solutionsText += `Réponse: ${enigma.answer}\n`;
-                solutionsText += `Explication: ${enigma.hints[enigma.hints.length - 1]}\n\n`;
-            });
-            
-            alert(solutionsText);
-        }
+    <!-- ========== 结束屏 ========== -->
+    <section class="section g-finish" id="viewFinish" hidden>
+      <div class="shell">
+        <p class="eyebrow g-finish__eyebrow" data-i18n="game.finish.eyebrow">行动报告 / MISSION REPORT</p>
+        <div class="g-finish__head">
+          <h1 class="display g-finish__title" id="finishTitle">行动完成</h1>
+          <span class="stamp stamp--ok" id="finishStamp">已完成</span>
+        </div>
 
-        function saveGameResult() {
-            const result = {
-                team: gameState.teamName,
-                score: gameState.score,
-                time: GAME_CONFIG.timeLimit - gameState.timeRemaining,
-                completed: gameState.gameCompleted,
-                timestamp: new Date().toISOString()
-            };
-            
-            // Sauvegarder dans localStorage
-            let results = JSON.parse(localStorage.getItem('cyberEscapeResults') || '[]');
-            results.push(result);
-            results.sort((a, b) => b.score - a.score); // Trier par score décroissant
-            localStorage.setItem('cyberEscapeResults', JSON.stringify(results));
-        }
+        <div class="g-stats">
+          <div class="g-stat">
+            <span class="g-stat__k" data-i18n="game.finish.solved">完成关卡</span>
+            <span class="g-stat__v" id="statSolved">0 / 6</span>
+          </div>
+          <div class="g-stat">
+            <span class="g-stat__k" data-i18n="game.finish.score">总分</span>
+            <span class="g-stat__v" id="statScore">0</span>
+          </div>
+          <div class="g-stat">
+            <span class="g-stat__k" data-i18n="game.finish.time">用时</span>
+            <span class="g-stat__v mono" id="statTime">00:00</span>
+          </div>
+          <div class="g-stat">
+            <span class="g-stat__k" data-i18n="game.finish.state">状态</span>
+            <span class="g-stat__v" id="statStatus">—</span>
+          </div>
+        </div>
 
-        // CSS pour l'animation de clignotement
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes blink {
-                0%, 50% { opacity: 1; }
-                51%, 100% { opacity: 0.3; }
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
+        <div class="plate plate--flat g-report">
+          <div class="plate-caption">
+            <span data-i18n="game.finish.table.title">逐关记录</span>
+            <span class="cap-id mono" id="reportId">REPORT</span>
+          </div>
+          <table class="data-table g-report__table">
+            <thead>
+              <tr>
+                <th data-i18n="game.finish.table.stage">关卡</th>
+                <th data-i18n="game.finish.table.result">结果</th>
+                <th data-i18n="game.finish.table.score">得分</th>
+              </tr>
+            </thead>
+            <tbody id="reportBody"></tbody>
+          </table>
+          <div class="g-report__foot">
+            <p class="muted g-report__note" data-i18n="game.finish.note">本次成绩已写入本机记录。</p>
+          </div>
+        </div>
+
+        <div class="g-finish__actions">
+          <button class="btn" type="button" id="solutionsBtn" data-i18n="game.finish.solutions">查看全部解析</button>
+          <a class="btn btn--ghost" href="index.html" data-i18n="game.finish.home">返回首页</a>
+          <button class="btn btn--ghost" type="button" id="againBtn" data-i18n="game.finish.again">再玩一次</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <div class="shell site-foot__inner">
+      <div class="site-foot__brand">
+        <span class="mono">OPERATION DIGITAL LOCKDOWN</span>
+        <p data-i18n="footer.note">一个面向高校新生的网络安全意识教学项目：可以自由用于课堂、社团与培训场合。</p>
+      </div>
+      <nav class="site-foot__nav" aria-label="页脚导航">
+        <a class="rowlink" href="index.html" data-i18n="nav.home">行动首页</a>
+        <a class="rowlink" href="game.html" data-i18n="nav.game">开始行动</a>
+        <a class="rowlink" href="admin.html" data-i18n="nav.admin">教师控制台</a>
+        <a class="rowlink" href="qr_generator.html" data-i18n="nav.qr">队伍二维码</a>
+        <a class="rowlink" href="https://github.com/zep4yrs/cyber-escape-game" target="_blank" rel="noopener" data-i18n="footer.source">源码</a>
+      </nav>
+      <div class="site-foot__meta">
+        <p data-i18n="footer.refs">内容参考《中华人民共和国网络安全法》《数据安全法》与国家网络安全宣传周的公开科普材料。</p>
+        <p data-i18n="footer.credit">视觉语言：雾蓝档案 · 参考枫桥的作品档案站</p>
+        <span class="mono" data-i18n="footer.license">MIT · 教学用途</span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- ========== 弹层 ========== -->
+  <div class="modal" id="modalResume" hidden>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="resumeTitle">
+      <div class="modal__head">
+        <h2 id="resumeTitle" data-i18n="game.resume.title">发现未完成的行动</h2>
+        <button class="ctl modal__close" type="button" data-close="modalResume" aria-label="关闭弹层" data-i18n-attr="aria-label:game.a11y.closeModal">×</button>
+      </div>
+      <p class="lede" data-i18n="game.resume.body">继续上次的进度，还是重新开始一局？</p>
+      <p class="mono g-modal-meta" id="resumeMeta"></p>
+      <div class="modal__foot">
+        <button class="btn" type="button" id="resumeContinue" data-i18n="game.resume.continue">继续上次行动</button>
+        <button class="btn btn--ghost" type="button" id="resumeRestart" data-i18n="game.resume.restart">重新开始</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalPause" hidden>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+      <div class="modal__head">
+        <h2 id="pauseTitle" data-i18n="game.pause.title">行动已暂停</h2>
+        <button class="ctl modal__close" type="button" data-close="modalPause" aria-label="关闭弹层" data-i18n-attr="aria-label:game.a11y.closeModal">×</button>
+      </div>
+      <p class="lede" data-i18n="game.pause.body">计时已经停止。点击「继续行动」回到关卡。</p>
+      <p class="mono g-modal-meta" id="pauseMeta"></p>
+      <div class="modal__foot">
+        <button class="btn" type="button" id="pauseResume" data-i18n="game.pause.resume">继续行动</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalTimeout" hidden>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="timeoutTitle">
+      <div class="modal__head">
+        <h2 id="timeoutTitle" data-i18n="game.timeout.title">时间到</h2>
+        <button class="ctl modal__close" type="button" data-close="modalTimeout" aria-label="关闭弹层" data-i18n-attr="aria-label:game.a11y.closeModal">×</button>
+      </div>
+      <p class="lede" data-i18n="game.timeout.body">30 分钟计时结束，行动已经停止。</p>
+      <p class="mono g-modal-meta" id="timeoutMeta"></p>
+      <div class="modal__foot">
+        <button class="btn" type="button" id="timeoutSolutions" data-i18n="game.timeout.solutions">查看全部解析</button>
+        <a class="btn btn--ghost" href="index.html" data-i18n="game.finish.home">返回首页</a>
+        <button class="btn btn--ghost" type="button" id="timeoutAgain" data-i18n="game.finish.again">再玩一次</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalSolutions" hidden>
+    <div class="modal__panel modal__panel--wide" role="dialog" aria-modal="true" aria-labelledby="solutionsTitle">
+      <div class="modal__head">
+        <h2 id="solutionsTitle" data-i18n="game.solutions.title">全部解析</h2>
+        <button class="ctl modal__close" type="button" data-close="modalSolutions" aria-label="关闭弹层" data-i18n-attr="aria-label:game.a11y.closeModal">×</button>
+      </div>
+      <p class="muted g-solutions__intro" data-i18n="game.solutions.intro">六道关卡的答案与知识点回顾。</p>
+      <div class="g-solutions" id="solutionsBody"></div>
+      <div class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-close="modalSolutions" data-i18n="game.solutions.close">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script defer src="js/i18n.js"></script>
+  <script defer src="js/locales/common.js"></script>
+  <script defer src="js/locales/game.js"></script>
+  <script defer src="js/data/scenarios.js"></script>
+  <script defer src="js/data/enigmas-classic.js"></script>
+  <script defer src="js/game.js"></script>
 </body>
 </html>

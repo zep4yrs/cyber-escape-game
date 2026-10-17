@@ -1,838 +1,716 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADMIN - Cyber Escape Game</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="admin.page.title">教师控制台 · 数字封锁行动</title>
+  <meta name="description" content="" data-i18n-attr="content:admin.page.desc">
+  <meta name="theme-color" content="#f2f5fd">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <!-- 字体：霞鹜文楷本地子集（按本站字符裁剪，无外部 CDN 依赖） -->
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    /* ==========================================================================
+       教师控制台 · 页面专属布局（只使用 theme.css 令牌，方形 / 细线 / 留白）
+       ========================================================================== */
+
+    .admin-top {
+      padding-bottom: 0;
+    }
+
+    /* 页面内 JS 用 hidden 属性控制显隐，需盖过组件自身的 display */
+    [hidden] {
+      display: none !important;
+    }
+
+    .admin-intro {
+      margin-bottom: clamp(20px, 2.2vw, 30px);
+    }
+
+    /* 状态行：在线数 / 最后刷新 / 演示标记 */
+    .admin-status {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 26px;
+      padding-block: 14px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-family: var(--font-mono);
+      font-size: var(--t-mono);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-44);
+    }
+
+    .admin-status__live {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--ink-62);
+    }
+
+    .admin-status__dot {
+      flex: none;
+      width: 7px;
+      height: 7px;
+      background: var(--ok);
+    }
+
+    .admin-status__dot[data-on='false'] {
+      background: var(--ink-28);
+    }
+
+    /* 工具栏 */
+    .admin-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: clamp(20px, 2.2vw, 30px);
+    }
+
+    .admin-toolbar .btn {
+      white-space: nowrap;
+    }
+
+    .admin-toolbar__spacer {
+      flex: 1 1 18px;
+    }
+
+    .btn--active {
+      border-color: var(--brand-line);
+      background: var(--brand-wash);
+      color: var(--brand);
+    }
+
+    .admin-source {
+      margin: 18px 0 0;
+    }
+
+    /* 四块统计 */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .stat-tile {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      min-height: 132px;
+      padding: clamp(18px, 1.9vw, 27px);
+      background: var(--surface);
+    }
+
+    .stat-tile__k {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--font-mono);
+      font-size: var(--t-mono);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-44);
+    }
+
+    .stat-tile__k::before {
+      content: '';
+      flex: none;
+      width: 6px;
+      height: 6px;
+      background: var(--brand);
+    }
+
+    .stat-tile__v {
+      font-family: var(--font-display);
+      font-size: clamp(30px, 3vw, 44px);
+      line-height: 1.04;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .stat-tile__sub {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.12em;
+      line-height: 1.7;
+      text-transform: uppercase;
+      color: var(--ink-44);
+    }
+
+    /* 队伍卡片网格 */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(316px, 1fr));
+      gap: clamp(14px, 1.4vw, 20px);
+    }
+
+    .team-card {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .team-card[data-demo='true'] {
+      border-left: 2px solid var(--brand-line);
+    }
+
+    .team-card__head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .team-card__name {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: var(--t-h3);
+      line-height: 1.3;
+      color: var(--ink);
+      overflow-wrap: anywhere;
+    }
+
+    .team-card__scenario {
+      margin-top: 6px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--ink-44);
+    }
+
+    .team-card__marks {
+      display: grid;
+      flex: none;
+      gap: 6px;
+      justify-items: end;
+    }
+
+    .tag--demo {
+      color: var(--brand);
+      border-color: var(--brand-line);
+      background: var(--brand-wash);
+    }
+
+    .team-card__body {
+      display: grid;
+      flex: 1 1 auto;
+      gap: 15px;
+      padding: 16px 18px;
+    }
+
+    .team-card__progress {
+      display: grid;
+      gap: 7px;
+    }
+
+    .team-card__progress-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: var(--t-mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-44);
+    }
+
+    .bar {
+      height: 4px;
+      border: 1px solid var(--line-soft);
+      background: var(--surface-3);
+      overflow: hidden;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      background: var(--brand);
+      transition: width 0.5s var(--ease-out);
+    }
+
+    .team-card[data-status='won'] .bar > span {
+      background: var(--ok);
+    }
+
+    .team-card[data-status='timeout'] .bar > span {
+      background: var(--alert);
+    }
+
+    .team-card[data-status='paused'] .bar > span {
+      background: var(--warn);
+    }
+
+    .team-card .kv {
+      margin: 0;
+      gap: 5px 16px;
+      font-size: var(--t-small);
+    }
+
+    .team-card .kv dt {
+      font-size: var(--t-mono);
+      letter-spacing: 0.08em;
+    }
+
+    .team-card .kv dd {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .team-card__foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 18px 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .team-card__id {
+      max-width: 46%;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+      color: var(--ink-28);
+      overflow-wrap: anywhere;
+      text-transform: none;
+    }
+
+    .team-actions {
+      gap: 8px;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    /* 成绩表 */
+    .results-wrap {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      overflow-x: auto;
+    }
+
+    .results-table {
+      min-width: 700px;
+      margin: 0;
+    }
+
+    .results-table th,
+    .results-table td {
+      padding: 12px 16px;
+    }
+
+    .results-table td:first-child {
+      color: var(--brand);
+    }
+
+    .results-team {
+      font-family: var(--font-display);
+      font-size: var(--t-small);
+      color: var(--ink);
+      overflow-wrap: anywhere;
+    }
+
+    .results-mode {
+      color: var(--ink-44);
+    }
+
+    .results-wrap--modal {
+      max-height: 52vh;
+      overflow: auto;
+    }
+
+    /* 空态内文 */
+    .empty {
+      display: grid;
+      gap: 8px;
+    }
+
+    .empty__title {
+      color: var(--ink-62);
+    }
+
+    .empty__body {
+      max-width: 58ch;
+      margin-inline: auto;
+      font-family: var(--font-sans);
+      font-size: var(--t-small);
+      letter-spacing: 0;
+      line-height: 1.85;
+      text-transform: none;
+    }
+
+    .demo-note {
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+      line-height: 1.8;
+      color: var(--ink-44);
+    }
+
+    /* 弹层内文 */
+    .modal__desc {
+      margin-bottom: 18px;
+      font-size: var(--t-small);
+      line-height: 1.85;
+      color: var(--ink-62);
+    }
+
+    .detail-head {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .detail-name {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: var(--t-h3);
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-marks {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .detail-kv {
+      margin: 0;
+    }
+
+    /* 响应式 */
+    @media (max-width: 900px) {
+      .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .stat-tile {
+        min-height: 112px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .team-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-toolbar .btn {
+        flex: 1 1 auto;
+      }
+
+      .admin-toolbar__spacer {
+        display: none;
+      }
+    }
+
+    @media (max-width: 460px) {
+      .stat-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
-<body class="admin-mode">
-    <div class="admin-container">
-        <header class="admin-header">
-            <h1>🎮 CYBER ESCAPE GAME - CONTRÔLE MISSION</h1>
-            <div class="admin-controls">
-                <div class="global-timer">
-                    ⏰ Temps global: <span id="globalTimer">30:00</span>
-                </div>
-                <div class="control-buttons">
-                    <button onclick="pauseAllGames()" class="btn-pause">⏸️ PAUSE GÉNÉRALE</button>
-                    <button onclick="resumeAllGames()" class="btn-resume">▶️ REPRENDRE</button>
-                    <button onclick="resetAllGames()" class="btn-reset">🔄 RESET COMPLET</button>
-                </div>
-            </div>
-        </header>
+<body>
+  <a class="skip" href="#main" data-i18n="a11y.skip">跳到主要内容</a>
 
-        <main class="admin-main">
-            <div class="teams-grid" id="teamsGrid">
-                <!-- Les équipes seront injectées dynamiquement -->
-            </div>
-
-            <div class="admin-sidebar">
-                <div class="quick-actions">
-                    <h3>⚡ Actions Rapides</h3>
-                    <button onclick="broadcastMessage()" class="quick-btn">📢 MESSAGE GLOBAL</button>
-                    <button onclick="giveHintAll()" class="quick-btn">💡 INDICE GÉNÉRAL</button>
-                    <button onclick="showLeaderboard()" class="quick-btn">🏆 CLASSEMENT</button>
-                    <button onclick="exportResults()" class="quick-btn">📊 EXPORT RÉSULTATS</button>
-                    <button onclick="refreshConnections()" class="quick-btn">🔄 ACTUALISER CONNEXIONS</button>
-                </div>
-
-                <div class="game-stats">
-                    <h3>📈 Statistiques</h3>
-                    <div class="stat-item">
-                        <span>Équipes connectées:</span>
-                        <span id="connectedTeams" class="stat-highlight">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Équipes actives:</span>
-                        <span id="activeTeams">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Énigmes résolues:</span>
-                        <span id="totalSolved">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Temps moyen:</span>
-                        <span id="averageTime">--:--</span>
-                    </div>
-                </div>
-
-                <div class="live-connections">
-                    <h3>🟢 Connexions Live</h3>
-                    <div id="liveConnectionsList" class="connections-list">
-                        <div class="no-connections">Aucune équipe connectée</div>
-                    </div>
-                </div>
-
-                <div class="announcements">
-                    <h3>📋 Annonces Programmées</h3>
-                    <div class="announcement-list">
-                        <div class="announcement-item">
-                            <span>5 min: "Hackers détectent votre intervention !"</span>
-                            <button onclick="triggerAnnouncement(1)">📢</button>
-                        </div>
-                        <div class="announcement-item">
-                            <span>15 min: "50% des systèmes compromis !"</span>
-                            <button onclick="triggerAnnouncement(2)">📢</button>
-                        </div>
-                        <div class="announcement-item">
-                            <span>25 min: "Plus que 5 minutes !"</span>
-                            <button onclick="triggerAnnouncement(3)">📢</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Modal pour messages -->
-        <div id="messageModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeModal()">&times;</span>
-                <h3>📢 Message Global</h3>
-                <textarea id="broadcastText" placeholder="Tapez votre message..."></textarea>
-                <div class="modal-buttons">
-                    <button onclick="sendBroadcast()" class="btn-send">Envoyer</button>
-                    <button onclick="closeModal()" class="btn-cancel">Annuler</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal Leaderboard -->
-        <div id="leaderboardModal" class="modal">
-            <div class="modal-content large">
-                <span class="close" onclick="closeModal()">&times;</span>
-                <h3>🏆 Classement en Temps Réel</h3>
-                <div id="leaderboardContent"></div>
-            </div>
-        </div>
+  <header class="site-head">
+    <div class="shell site-head__inner">
+      <a class="brand" href="index.html" aria-label="数字封锁行动">
+        <span class="brand__seal" aria-hidden="true">封</span>
+        <span class="brand__text">
+          <span class="brand__name" data-i18n="site.name">数字封锁行动</span>
+          <span class="brand__sub mono">OPERATION DIGITAL LOCKDOWN</span>
+        </span>
+      </a>
+      <nav class="site-nav" aria-label="主导航">
+        <a class="rowlink" href="index.html" data-i18n="nav.home">行动首页</a>
+        <a class="rowlink" href="game.html" data-i18n="nav.game">开始行动</a>
+        <a class="rowlink" href="admin.html" aria-current="page" data-i18n="nav.admin">教师控制台</a>
+        <a class="rowlink" href="qr_generator.html" data-i18n="nav.qr">队伍二维码</a>
+      </nav>
+      <div class="langswitch" data-lang-switch data-i18n-attr="aria-label:a11y.langSwitch" aria-label="切换语言"></div>
     </div>
+  </header>
 
-    <script src="js/admin.js"></script>
-    <script>
-        // Données des équipes (simulation)
-        let teamsData = [
-            {id: 'TEAM01', name: 'Cyber Warriors', progress: 0, currentEnigma: 1, time: 0, attempts: 0, hints: 0, status: 'active'},
-            {id: 'TEAM02', name: 'Digital Guardians', progress: 0, currentEnigma: 1, time: 0, attempts: 0, hints: 0, status: 'active'},
-            {id: 'TEAM03', name: 'Security Squad', progress: 0, currentEnigma: 1, time: 0, attempts: 0, hints: 0, status: 'active'},
-            {id: 'TEAM04', name: 'Code Breakers', progress: 0, currentEnigma: 1, time: 0, attempts: 0, hints: 0, status: 'active'},
-            {id: 'TEAM05', name: 'Byte Force', progress: 0, currentEnigma: 1, time: 0, attempts: 0, hints: 0, status: 'active'},
-            {id: 'TEAM06', name: 'Firewall Fighters', progress: 0, currentEnigma: 1, time: 0, attempts: 0, hints: 0, status: 'active'},
-        ];
+  <main id="main" class="page-enter">
+    <!-- 题头 / 状态 / 工具栏 -->
+    <section class="section admin-top">
+      <div class="shell">
+        <div class="section-head">
+          <span class="num">CTL-01</span>
+          <h2 data-i18n="admin.title">教师控制台</h2>
+          <span class="head-lead" aria-hidden="true"></span>
+          <span class="sub" data-i18n="admin.kicker">INSTRUCTOR CONSOLE</span>
+        </div>
 
-        let gameStarted = false;
-        let globalTime = 30 * 60; // 30 minutes
+        <div class="admin-intro">
+          <p class="lede" data-i18n="admin.intro">在教师机上实时查看本机同源浏览器的对局会话：队伍进度、当前关卡、得分与成绩一并汇总。控制台不向网络上传任何数据。</p>
+        </div>
 
-        // Initialisation
-        window.onload = function() {
-            renderTeams();
-            startGlobalTimer();
-            simulateTeamProgress(); // Simulation pour démo
-        };
+        <div class="admin-status">
+          <span class="admin-status__live">
+            <span class="admin-status__dot" id="statusDot" data-on="false" aria-hidden="true"></span>
+            <span id="statusLive" aria-live="polite">在线队伍 0</span>
+          </span>
+          <span id="statusRefresh">最后刷新 --:--:--</span>
+          <span class="stamp stamp--brand" id="demoStamp" hidden data-i18n="admin.status.demo">演示数据已载入</span>
+        </div>
 
-        function renderTeams() {
-            const grid = document.getElementById('teamsGrid');
-            grid.innerHTML = '';
+        <div class="admin-toolbar" role="group" data-i18n-attr="aria-label:admin.tools.label" aria-label="控制台操作">
+          <button type="button" class="btn btn--ghost btn--sm" id="btnRefresh" data-i18n="admin.tool.refresh">刷新</button>
+          <button type="button" class="btn btn--warn btn--sm" id="btnPauseAll" data-i18n="admin.tool.pauseAll">全体暂停</button>
+          <button type="button" class="btn btn--ghost btn--sm" id="btnResumeAll" data-i18n="admin.tool.resumeAll">全体继续</button>
+          <button type="button" class="btn btn--sm" id="btnBroadcast" data-i18n="admin.tool.broadcast">广播消息</button>
+          <button type="button" class="btn btn--ghost btn--sm" id="btnHint" data-i18n="admin.tool.hint">推送提示</button>
+          <button type="button" class="btn btn--ghost btn--sm" id="btnLeaderboard" data-i18n="admin.tool.leaderboard">排行榜</button>
+          <button type="button" class="btn btn--ghost btn--sm" id="btnExport" data-i18n="admin.tool.export">导出 CSV</button>
+          <button type="button" class="btn btn--warn btn--sm" id="btnResetAll" data-i18n="admin.tool.resetAll">重置全部</button>
+          <span class="admin-toolbar__spacer" aria-hidden="true"></span>
+          <button type="button" class="btn btn--quiet btn--sm" id="btnDemo" aria-pressed="false">载入演示数据</button>
+        </div>
 
-            teamsData.forEach(team => {
-                const progressPercent = (team.progress / 6) * 100;
-                const statusClass = team.status === 'completed' ? 'completed' : team.status === 'paused' ? 'paused' : 'active';
-                const connectionClass = team.connectionStatus || 'offline';
-                
-                // Calcul du temps depuis la dernière activité
-                let lastSeenText = '';
-                if (team.lastUpdate) {
-                    const timeSince = Math.floor((Date.now() - team.lastUpdate) / 1000);
-                    if (timeSince < 60) {
-                        lastSeenText = 'En ligne maintenant';
-                    } else if (timeSince < 3600) {
-                        lastSeenText = `Il y a ${Math.floor(timeSince / 60)} min`;
-                    } else {
-                        lastSeenText = `Il y a ${Math.floor(timeSince / 3600)}h`;
-                    }
-                } else {
-                    lastSeenText = 'Jamais connecté';
-                }
-                
-                const teamCard = `
-                    <div class="team-card ${statusClass} ${connectionClass}">
-                        <div class="team-header">
-                            <h4>
-                                <span class="connection-indicator ${connectionClass}"></span>
-                                ${team.name}
-                            </h4>
-                            <span class="team-id">${team.id}</span>
-                        </div>
-                        
-                        <div class="team-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${progressPercent}%"></div>
-                            </div>
-                            <div class="progress-info">
-                                <span>Énigmes: ${team.progress}/6</span>
-                                <span>Temps: ${formatTime(team.time)}</span>
-                            </div>
-                        </div>
+        <p class="note admin-source">
+          <span data-i18n="admin.note.local">数据来源：本机浏览器的 localStorage（cyberEscape:live / cyberEscape:results）。请在与游戏相同的浏览器中打开本页。</span>
+        </p>
+      </div>
+    </section>
 
-                        <div class="team-details">
-                            <div class="detail-item">
-                                <span>Énigme actuelle:</span>
-                                <span class="current-enigma">${team.currentEnigma}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span>Tentatives:</span>
-                                <span>${team.attempts}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span>Indices utilisés:</span>
-                                <span>${team.hints}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span>Statut:</span>
-                                <span class="connection-status ${connectionClass}">
-                                    ${connectionClass === 'active' ? '🟢 En ligne' : 
-                                      connectionClass === 'connected' ? '🟡 Connecté' : '🔴 Hors ligne'}
-                                </span>
-                            </div>
-                        </div>
+    <!-- 四块统计 -->
+    <section class="section" aria-labelledby="statsTitle">
+      <div class="shell">
+        <h2 class="sr" id="statsTitle" data-i18n="admin.stats.label">对局统计</h2>
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <span class="stat-tile__k" data-i18n="admin.stats.live">在线队伍</span>
+            <span class="stat-tile__v" id="statLive">0</span>
+            <span class="stat-tile__sub" id="statLiveSub">进行中 + 已暂停</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-tile__k" data-i18n="admin.stats.completed">已完成</span>
+            <span class="stat-tile__v" id="statWon">0</span>
+            <span class="stat-tile__sub" id="statWonSub">完成率 0%</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-tile__k" data-i18n="admin.stats.avgScore">平均得分</span>
+            <span class="stat-tile__v" id="statScore">—</span>
+            <span class="stat-tile__sub" id="statScoreSub">暂无数据</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-tile__k" data-i18n="admin.stats.avgTime">平均用时</span>
+            <span class="stat-tile__v" id="statTime">—</span>
+            <span class="stat-tile__sub" id="statTimeSub">暂无数据</span>
+          </div>
+        </div>
+      </div>
+    </section>
 
-                        <div class="last-seen">${lastSeenText}</div>
+    <!-- 队伍实时状态 -->
+    <section class="section" aria-labelledby="teamsTitle">
+      <div class="shell">
+        <div class="section-head">
+          <span class="num">LIVE</span>
+          <h2 id="teamsTitle" data-i18n="admin.teams.title">队伍实时状态</h2>
+          <span class="head-lead" aria-hidden="true"></span>
+          <span class="sub" id="teamCount">LIVE TEAMS</span>
+        </div>
 
-                        <div class="team-actions">
-                            <button onclick="giveHint('${team.id}')" class="btn-hint">💡 Indice</button>
-                            <button onclick="viewTeam('${team.id}')" class="btn-view">👁️ Observer</button>
-                            <button onclick="pauseTeam('${team.id}')" class="btn-pause-team">⏸️</button>
-                        </div>
-                    </div>
-                `;
-                
-                grid.innerHTML += teamCard;
-            });
+        <div class="team-grid" id="teamGrid"></div>
 
-            updateStats();
-        }
+        <div class="empty" id="teamEmpty">
+          <p class="empty__title" data-i18n="admin.teams.emptyTitle">还没有队伍连接</p>
+          <p class="empty__body" data-i18n="admin.teams.emptyBody">请在本机同源浏览器里打开游戏页开始行动；本控制台读取浏览器本地会话。</p>
+        </div>
 
-        // Initialisation avec indicateurs temps réel
-        window.onload = function() {
-            addRealTimeIndicators();
-            addConnectionStyles();
-            renderTeams();
-            startGlobalTimer();
-            
-            // Scan initial des équipes connectées
-            updateConnectedTeamsDisplay();
-            
-            // Mise à jour périodique des équipes connectées (toutes les 10 secondes)
-            setInterval(updateConnectedTeamsDisplay, 10000);
-            
-            // Simulation pour la démo (à supprimer en production)
-            simulateTeamProgress();
-            
-            // Simulation de connexions d'équipes pour la démo
-            simulateTeamConnections();
-            
-            // Message de bienvenue admin
-            setTimeout(() => {
-                showNotification('🎮 Dashboard Admin initialisé', 'info');
-            }, 1000);
-        };
+        <p class="demo-note" id="demoNote" hidden data-i18n="admin.demo.note">演示队伍只写入本机浏览器，用于没有真实对局时的界面展示，可随时清除。</p>
+      </div>
+    </section>
 
-        function simulateTeamConnections() {
-            // Simulation de quelques équipes qui se connectent
-            setTimeout(() => {
-                // Simuler TEAM01 qui se connecte
-                localStorage.setItem('adminStats_TEAM01', JSON.stringify({
-                    team: 'TEAM01',
-                    progress: 0,
-                    currentEnigma: 1,
-                    time: 0,
-                    attempts: 0,
-                    hints: 0,
-                    timestamp: Date.now()
-                }));
-            }, 2000);
-            
-            setTimeout(() => {
-                // Simuler TEAM02 qui se connecte
-                localStorage.setItem('adminStats_TEAM02', JSON.stringify({
-                    team: 'TEAM02',
-                    progress: 1,
-                    currentEnigma: 2,
-                    time: 180,
-                    attempts: 2,
-                    hints: 0,
-                    timestamp: Date.now()
-                }));
-            }, 5000);
-            
-            setTimeout(() => {
-                // Simuler TEAM03 qui se connecte
-                localStorage.setItem('adminStats_TEAM03', JSON.stringify({
-                    team: 'TEAM03',
-                    progress: 0,
-                    currentEnigma: 1,
-                    time: 45,
-                    attempts: 1,
-                    hints: 1,
-                    timestamp: Date.now()
-                }));
-            }, 8000);
-        }
+    <!-- 成绩榜 -->
+    <section class="section" aria-labelledby="resultsTitle">
+      <div class="shell">
+        <div class="section-head">
+          <span class="num">LOG</span>
+          <h2 id="resultsTitle" data-i18n="admin.results.title">成绩榜</h2>
+          <span class="head-lead" aria-hidden="true"></span>
+          <span class="sub" id="resultCount">RESULTS LOG</span>
+        </div>
 
-        function startGlobalTimer() {
-            const timerElement = document.getElementById('globalTimer');
-            
-            const timer = setInterval(() => {
-                if (globalTime <= 0) {
-                    clearInterval(timer);
-                    endGame();
-                    return;
-                }
-                
-                globalTime--;
-                timerElement.textContent = formatTime(globalTime);
-                
-                // Mise à jour du temps pour chaque équipe
-                teamsData.forEach(team => {
-                    if (team.status === 'active') {
-                        team.time++;
-                    }
-                });
-                
-                // Déclenchement d'annonces automatiques
-                checkAutoAnnouncements();
-                
-                // Mise à jour de l'affichage
-                renderTeams();
-                
-            }, 1000);
-        }
+        <div class="results-wrap" id="resultsWrap" hidden>
+          <table class="data-table results-table">
+            <thead>
+              <tr>
+                <th scope="col" data-i18n="admin.col.rank">名次</th>
+                <th scope="col" data-i18n="admin.col.team">队伍</th>
+                <th scope="col" data-i18n="admin.col.scenario">模式</th>
+                <th scope="col" data-i18n="admin.col.solved">解题数</th>
+                <th scope="col" data-i18n="admin.col.elapsed">用时</th>
+                <th scope="col" data-i18n="admin.col.score">得分</th>
+                <th scope="col" data-i18n="admin.col.status">状态</th>
+                <th scope="col" data-i18n="admin.col.finished">完成时间</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
 
-        function checkAutoAnnouncements() {
-            const remaining = globalTime;
-            
-            if (remaining === 25 * 60) {
-                triggerAnnouncement(1);
-            } else if (remaining === 15 * 60) {
-                triggerAnnouncement(2);
-            } else if (remaining === 5 * 60) {
-                triggerAnnouncement(3);
-            }
-        }
+        <div class="empty" id="resultsEmpty">
+          <p class="empty__title" data-i18n="admin.results.emptyTitle">还没有成绩记录</p>
+          <p class="empty__body" data-i18n="admin.results.emptyBody">队伍完成行动或时间到之后，成绩会自动出现在这里。</p>
+        </div>
+      </div>
+    </section>
+  </main>
 
-        function simulateTeamProgress() {
-            // Simulation de progression d'équipes pour la démo
-            setInterval(() => {
-                if (Math.random() > 0.7) { // 30% de chance
-                    const randomTeam = teamsData[Math.floor(Math.random() * teamsData.length)];
-                    if (randomTeam.status === 'active' && randomTeam.progress < 6) {
-                        if (Math.random() > 0.5) {
-                            randomTeam.progress++;
-                            randomTeam.currentEnigma = Math.min(randomTeam.currentEnigma + 1, 6);
-                        } else {
-                            randomTeam.attempts++;
-                        }
-                    }
-                }
-            }, 5000);
-        }
+  <footer class="site-foot">
+    <div class="shell site-foot__inner">
+      <div class="site-foot__brand">
+        <span class="mono">OPERATION DIGITAL LOCKDOWN</span>
+        <p data-i18n="footer.note">一个面向高校新生的网络安全意识教学项目：可以自由用于课堂、社团与培训场合。</p>
+      </div>
+      <nav class="site-foot__nav" aria-label="页脚导航">
+        <a class="rowlink" href="index.html" data-i18n="nav.home">行动首页</a>
+        <a class="rowlink" href="game.html" data-i18n="nav.game">开始行动</a>
+        <a class="rowlink" href="admin.html" data-i18n="nav.admin">教师控制台</a>
+        <a class="rowlink" href="qr_generator.html" data-i18n="nav.qr">队伍二维码</a>
+        <a class="rowlink" href="https://github.com/zep4yrs/cyber-escape-game" target="_blank" rel="noopener" data-i18n="footer.source">源码</a>
+      </nav>
+      <div class="site-foot__meta">
+        <p data-i18n="footer.refs">内容参考《中华人民共和国网络安全法》《数据安全法》与国家网络安全宣传周的公开科普材料。</p>
+        <p data-i18n="footer.credit">视觉语言：雾蓝档案 · 参考枫桥的作品档案站</p>
+        <span class="mono" data-i18n="footer.license">MIT · 教学用途</span>
+      </div>
+    </div>
+  </footer>
 
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="false"></div>
 
-        function updateStats() {
-            const connectedTeams = scanConnectedTeams();
-            const activeCount = connectedTeams.filter(team => team.isActive).length;
-            const totalSolved = teamsData.reduce((sum, team) => sum + team.progress, 0);
-            const avgTime = teamsData.reduce((sum, team) => sum + team.time, 0) / teamsData.length;
+  <!-- 广播消息 -->
+  <div class="modal" id="modalBroadcast" hidden role="dialog" aria-modal="true" aria-labelledby="broadcastTitle">
+    <div class="modal__panel">
+      <div class="modal__head">
+        <h2 id="broadcastTitle" data-i18n="admin.broadcast.title">广播消息</h2>
+        <button type="button" class="ctl modal__close" data-close="modalBroadcast" data-i18n-attr="aria-label:common.close" aria-label="关闭">&times;</button>
+      </div>
+      <p class="modal__desc" data-i18n="admin.broadcast.desc">所有在线队伍会立即收到这条消息，并显示为站内提示。</p>
+      <div class="field">
+        <label for="broadcastText" data-i18n="admin.broadcast.label">消息内容</label>
+        <textarea class="textarea" id="broadcastText" rows="4" data-i18n-attr="placeholder:admin.broadcast.placeholder" placeholder="例如：距离行动结束还有 10 分钟，请各队核对最终答案。"></textarea>
+      </div>
+      <div class="modal__foot">
+        <button type="button" class="btn btn--ghost btn--sm" data-close="modalBroadcast" data-i18n="common.cancel">取消</button>
+        <button type="button" class="btn btn--sm" id="broadcastSend" data-i18n="admin.broadcast.send">发送广播</button>
+      </div>
+    </div>
+  </div>
 
-            document.getElementById('connectedTeams').textContent = connectedTeams.length;
-            document.getElementById('activeTeams').textContent = activeCount;
-            document.getElementById('totalSolved').textContent = totalSolved;
-            document.getElementById('averageTime').textContent = formatTime(Math.floor(avgTime));
-            
-            // Mise à jour de la liste des connexions live
-            updateLiveConnectionsList(connectedTeams);
-        }
+  <!-- 推送提示 -->
+  <div class="modal" id="modalHint" hidden role="dialog" aria-modal="true" aria-labelledby="hintTitle">
+    <div class="modal__panel">
+      <div class="modal__head">
+        <h2 id="hintTitle" data-i18n="admin.hint.title">推送提示</h2>
+        <button type="button" class="ctl modal__close" data-close="modalHint" data-i18n-attr="aria-label:common.close" aria-label="关闭">&times;</button>
+      </div>
+      <p class="modal__desc" data-i18n="admin.hint.desc">提示会立即推送到所有在线队伍。请只给出下一步线索，不要直接给出答案。</p>
+      <div class="field">
+        <label for="hintText" data-i18n="admin.hint.label">提示内容</label>
+        <textarea class="textarea" id="hintText" rows="3" data-i18n-attr="placeholder:admin.hint.placeholder" placeholder="例如：注意口令里的年份后缀。"></textarea>
+      </div>
+      <div class="modal__foot">
+        <button type="button" class="btn btn--ghost btn--sm" data-close="modalHint" data-i18n="common.cancel">取消</button>
+        <button type="button" class="btn btn--sm" id="hintSend" data-i18n="admin.hint.send">推送提示</button>
+      </div>
+    </div>
+  </div>
 
-        function updateLiveConnectionsList(connectedTeams) {
-            const listContainer = document.getElementById('liveConnectionsList');
-            
-            if (connectedTeams.length === 0) {
-                listContainer.innerHTML = '<div class="no-connections">Aucune équipe connectée</div>';
-                return;
-            }
-            
-            let listHTML = '';
-            connectedTeams.forEach(team => {
-                const teamData = teamsData.find(t => t.id === team.teamId);
-                const statusIcon = team.isActive ? '🟢' : '🟡';
-                const timeSince = Math.floor((Date.now() - team.lastActivity) / 1000);
-                const timeText = timeSince < 60 ? 'maintenant' : `il y a ${Math.floor(timeSince/60)}min`;
-                
-                listHTML += `
-                    <div class="connection-item ${team.isActive ? 'active' : 'inactive'}">
-                        <div class="connection-header">
-                            <span class="status-icon">${statusIcon}</span>
-                            <span class="team-name">${teamData?.name || team.teamId}</span>
-                        </div>
-                        <div class="connection-details">
-                            <small>Énigme ${teamData?.currentEnigma || 1} • ${timeText}</small>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            listContainer.innerHTML = listHTML;
-        }
+  <!-- 排行榜 -->
+  <div class="modal" id="modalLeaderboard" hidden role="dialog" aria-modal="true" aria-labelledby="leaderboardTitle">
+    <div class="modal__panel modal__panel--wide">
+      <div class="modal__head">
+        <h2 id="leaderboardTitle" data-i18n="admin.leaderboard.title">实时排行榜</h2>
+        <button type="button" class="ctl modal__close" data-close="modalLeaderboard" data-i18n-attr="aria-label:common.close" aria-label="关闭">&times;</button>
+      </div>
+      <p class="modal__desc" data-i18n="admin.leaderboard.desc">按得分从高到低排序；得分相同时，用时较短者在前。</p>
+      <div class="results-wrap results-wrap--modal" id="leaderboardWrap" hidden>
+        <table class="data-table results-table">
+          <thead>
+            <tr>
+              <th scope="col" data-i18n="admin.col.rank">名次</th>
+              <th scope="col" data-i18n="admin.col.team">队伍</th>
+              <th scope="col" data-i18n="admin.col.scenario">模式</th>
+              <th scope="col" data-i18n="admin.col.solved">解题数</th>
+              <th scope="col" data-i18n="admin.col.elapsed">用时</th>
+              <th scope="col" data-i18n="admin.col.score">得分</th>
+              <th scope="col" data-i18n="admin.col.status">状态</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="leaderboardEmpty">
+        <p class="empty__title" data-i18n="admin.results.emptyTitle">还没有成绩记录</p>
+        <p class="empty__body" data-i18n="admin.results.emptyBody">队伍完成行动或时间到之后，成绩会自动出现在这里。</p>
+      </div>
+      <div class="modal__foot">
+        <button type="button" class="btn btn--ghost btn--sm" data-close="modalLeaderboard" data-i18n="common.close">关闭</button>
+      </div>
+    </div>
+  </div>
 
-        function refreshConnections() {
-            updateConnectedTeamsDisplay();
-            showNotification('🔄 Connexions actualisées', 'info');
-        }
+  <!-- 重置二次确认 -->
+  <div class="modal" id="modalReset" hidden role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+    <div class="modal__panel">
+      <div class="modal__head">
+        <h2 id="resetTitle" data-i18n="admin.reset.title">重置全部数据</h2>
+        <button type="button" class="ctl modal__close" data-close="modalReset" data-i18n-attr="aria-label:common.close" aria-label="关闭">&times;</button>
+      </div>
+      <p class="modal__desc" data-i18n="admin.reset.body">这会清空本机的实时队伍状态、成绩记录与所有行动快照，并通知已连接的游戏页回到欢迎屏。此操作无法撤销。</p>
+      <div class="modal__foot">
+        <button type="button" class="btn btn--ghost btn--sm" data-close="modalReset" data-i18n="common.cancel">取消</button>
+        <button type="button" class="btn btn--warn btn--sm" id="resetConfirm" data-i18n="admin.reset.confirm">确认重置</button>
+      </div>
+    </div>
+  </div>
 
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `admin-notification ${type}`;
-            notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                background: ${type === 'info' ? '#0066ff' : '#00ff00'};
-                color: white;
-                border-radius: 5px;
-                font-weight: bold;
-                z-index: 5000;
-                animation: slideInRight 0.3s ease-out;
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.animation = 'slideOutRight 0.3s ease-in forwards';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }, 3000);
-        }
+  <!-- 队伍详情 -->
+  <div class="modal" id="modalTeam" hidden role="dialog" aria-modal="true" aria-labelledby="teamDetailTitle">
+    <div class="modal__panel">
+      <div class="modal__head">
+        <h2 id="teamDetailTitle" data-i18n="admin.detail.title">队伍详情</h2>
+        <button type="button" class="ctl modal__close" data-close="modalTeam" data-i18n-attr="aria-label:common.close" aria-label="关闭">&times;</button>
+      </div>
+      <div id="teamDetailBody"></div>
+      <div class="modal__foot">
+        <button type="button" class="btn btn--ghost btn--sm" data-close="modalTeam" data-i18n="common.close">关闭</button>
+        <button type="button" class="btn btn--sm" id="teamDetailHint" data-i18n="admin.team.hint">推送提示</button>
+      </div>
+    </div>
+  </div>
 
-        // Ajout des styles pour les connexions live
-        function addConnectionStyles() {
-            const style = document.createElement('style');
-            style.textContent = `
-                .live-connections {
-                    background: rgba(0, 0, 0, 0.8);
-                    border: 2px solid #00ff00;
-                    border-radius: 10px;
-                    padding: 20px;
-                }
-                
-                .live-connections h3 {
-                    color: #00ff00;
-                    margin-bottom: 15px;
-                    font-size: 16px;
-                }
-                
-                .connections-list {
-                    max-height: 200px;
-                    overflow-y: auto;
-                }
-                
-                .connection-item {
-                    padding: 8px 12px;
-                    margin-bottom: 8px;
-                    background: rgba(0, 255, 0, 0.05);
-                    border-left: 3px solid #666;
-                    border-radius: 5px;
-                    transition: all 0.3s ease;
-                }
-                
-                .connection-item.active {
-                    border-left-color: #00ff00;
-                    background: rgba(0, 255, 0, 0.1);
-                }
-                
-                .connection-item.inactive {
-                    border-left-color: #ffaa00;
-                    background: rgba(255, 170, 0, 0.1);
-                }
-                
-                .connection-header {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    margin-bottom: 4px;
-                }
-                
-                .status-icon {
-                    font-size: 12px;
-                }
-                
-                .team-name {
-                    font-weight: bold;
-                    color: white;
-                    font-size: 12px;
-                }
-                
-                .connection-details small {
-                    color: #aaa;
-                    font-size: 10px;
-                }
-                
-                .no-connections {
-                    text-align: center;
-                    color: #666;
-                    font-style: italic;
-                    padding: 20px;
-                }
-                
-                .stat-highlight {
-                    color: #00ff00 !important;
-                    font-weight: bold;
-                    font-size: 16px;
-                }
-                
-                @keyframes slideInRight {
-                    from { transform: translateX(400px); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                
-                @keyframes slideOutRight {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(400px); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        // Actions d'administration
-        function pauseAllGames() {
-            teamsData.forEach(team => {
-                if (team.status === 'active') team.status = 'paused';
-            });
-            renderTeams();
-            broadcastSystemMessage("⏸️ PAUSE GÉNÉRALE - Attendez les instructions");
-        }
-
-        function resumeAllGames() {
-            teamsData.forEach(team => {
-                if (team.status === 'paused') team.status = 'active';
-            });
-            renderTeams();
-            broadcastSystemMessage("▶️ REPRISE DU JEU - Continuez votre mission !");
-        }
-
-        function giveHint(teamId) {
-            const team = teamsData.find(t => t.id === teamId);
-            if (team) {
-                team.hints++;
-                const hint = getHintForEnigma(team.currentEnigma);
-                // Dans une vraie implémentation, on enverrait l'indice à l'équipe
-                alert(`Indice envoyé à ${teamId}: ${hint}`);
-                renderTeams();
-            }
-        }
-
-        function getHintForEnigma(enigmaNumber) {
-            const hints = {
-                1: "Pensez à l'alphabet et aux chiffres... A=1, B=2...",
-                2: "Regardez attentivement les domaines et les URLs",
-                3: "Superposez les éléments pour reconstituer l'image",
-                4: "Méfiez-vous des noms trop similaires aux vrais réseaux",
-                5: "Les informations personnelles sont souvent utilisées dans les mots de passe",
-                6: "Additionnez tous les chiffres que vous avez trouvés"
-            };
-            return hints[enigmaNumber] || "Continuez à chercher !";
-        }
-
-        function broadcastMessage() {
-            document.getElementById('messageModal').style.display = 'block';
-        }
-
-        function sendBroadcast() {
-            const message = document.getElementById('broadcastText').value;
-            if (message.trim()) {
-                broadcastSystemMessage(message);
-                closeModal();
-                document.getElementById('broadcastText').value = '';
-            }
-        }
-
-        function broadcastSystemMessage(message) {
-            // Dans une vraie implémentation, ceci enverrait le message à toutes les équipes
-            console.log('Broadcast:', message);
-            
-            // Simulation d'affichage du message
-            const notification = document.createElement('div');
-            notification.className = 'broadcast-notification';
-            notification.textContent = `📢 ${message}`;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 5000);
-        }
-
-        function triggerAnnouncement(announcementId) {
-            const announcements = {
-                1: "🚨 Les hackers ont détecté votre intervention ! Ils accélèrent leur attaque !",
-                2: "⚠️ ALERTE CRITIQUE ! 50% des systèmes sont maintenant compromis !",
-                3: "🔥 DERNIÈRE LIGNE DROITE ! Plus que 5 minutes pour sauver l'université !"
-            };
-            
-            broadcastSystemMessage(announcements[announcementId]);
-        }
-
-        function showLeaderboard() {
-            const sortedTeams = [...teamsData].sort((a, b) => {
-                if (a.progress !== b.progress) return b.progress - a.progress;
-                return a.time - b.time;
-            });
-
-            let leaderboardHTML = '<div class="leaderboard">';
-            sortedTeams.forEach((team, index) => {
-                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-                leaderboardHTML += `
-                    <div class="leaderboard-item">
-                        <span class="rank">${medal}</span>
-                        <span class="team-name">${team.name}</span>
-                        <span class="team-progress">${team.progress}/6</span>
-                        <span class="team-time">${formatTime(team.time)}</span>
-                    </div>
-                `;
-            });
-            leaderboardHTML += '</div>';
-
-            document.getElementById('leaderboardContent').innerHTML = leaderboardHTML;
-            document.getElementById('leaderboardModal').style.display = 'block';
-        }
-
-        function scanConnectedTeams() {
-            // Scan des équipes connectées via localStorage
-            const connectedTeams = [];
-            const allTeamIds = teamsData.map(team => team.id);
-            
-            allTeamIds.forEach(teamId => {
-                // Vérifier si l'équipe a des données récentes (moins de 5 minutes)
-                const teamProgress = localStorage.getItem(`gameProgress_${teamId}`);
-                const adminStats = localStorage.getItem(`adminStats_${teamId}`);
-                
-                if (teamProgress || adminStats) {
-                    try {
-                        const data = JSON.parse(teamProgress || adminStats || '{}');
-                        const lastActivity = data.lastSave || data.timestamp || 0;
-                        const now = Date.now();
-                        
-                        // Considérer comme connectée si activité dans les 5 dernières minutes
-                        if (now - lastActivity < 5 * 60 * 1000) {
-                            connectedTeams.push({
-                                teamId: teamId,
-                                lastActivity: lastActivity,
-                                isActive: now - lastActivity < 60 * 1000 // Active si < 1 minute
-                            });
-                        }
-                    } catch (e) {
-                        console.log(`Erreur parsing données ${teamId}:`, e);
-                    }
-                }
-            });
-            
-            return connectedTeams;
-        }
-
-        function updateConnectedTeamsDisplay() {
-            const connectedTeams = scanConnectedTeams();
-            const activeTeams = connectedTeams.filter(team => team.isActive);
-            
-            // Mise à jour du compteur d'équipes actives
-            document.getElementById('activeTeams').textContent = connectedTeams.length;
-            
-            // Mise à jour du statut des équipes dans la grille
-            teamsData.forEach(team => {
-                const connectedTeam = connectedTeams.find(ct => ct.teamId === team.id);
-                const isConnected = !!connectedTeam;
-                const isActive = connectedTeam?.isActive || false;
-                
-                // Mise à jour du statut de connexion
-                if (isActive) {
-                    team.connectionStatus = 'active';
-                } else if (isConnected) {
-                    team.connectionStatus = 'connected';
-                } else {
-                    team.connectionStatus = 'offline';
-                }
-                
-                // Synchronisation des données si disponibles
-                if (connectedTeam) {
-                    syncTeamData(team.id);
-                }
-            });
-            
-            // Mise à jour de l'affichage
-            renderTeams();
-            
-            // Affichage des équipes connectées dans la console (debug)
-            if (connectedTeams.length > 0) {
-                console.log(`📊 Équipes connectées: ${connectedTeams.length}, Actives: ${activeTeams.length}`);
-            }
-        }
-
-        function syncTeamData(teamId) {
-            // Synchronisation des données d'une équipe depuis localStorage
-            const teamProgress = localStorage.getItem(`gameProgress_${teamId}`);
-            const adminStats = localStorage.getItem(`adminStats_${teamId}`);
-            
-            if (adminStats) {
-                try {
-                    const stats = JSON.parse(adminStats);
-                    const team = teamsData.find(t => t.id === teamId);
-                    
-                    if (team && stats) {
-                        team.progress = stats.progress || 0;
-                        team.currentEnigma = stats.currentEnigma || 1;
-                        team.time = stats.time || 0;
-                        team.attempts = stats.attempts || 0;
-                        team.hints = stats.hints || 0;
-                        team.lastUpdate = stats.timestamp;
-                    }
-                } catch (e) {
-                    console.error(`Erreur sync équipe ${teamId}:`, e);
-                }
-            }
-        }
-
-        function addRealTimeIndicators() {
-            // Ajout d'indicateurs temps réel dans les cartes d'équipes
-            const style = document.createElement('style');
-            style.textContent = `
-                .connection-indicator {
-                    display: inline-block;
-                    width: 10px;
-                    height: 10px;
-                    border-radius: 50%;
-                    margin-right: 8px;
-                    animation: pulse 2s infinite;
-                }
-                
-                .connection-indicator.active {
-                    background: #00ff00;
-                    box-shadow: 0 0 8px #00ff00;
-                }
-                
-                .connection-indicator.connected {
-                    background: #ffaa00;
-                    box-shadow: 0 0 8px #ffaa00;
-                }
-                
-                .connection-indicator.offline {
-                    background: #666666;
-                    animation: none;
-                }
-                
-                .team-card.active {
-                    border-color: #00ff00;
-                    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
-                }
-                
-                .team-card.connected {
-                    border-color: #ffaa00;
-                }
-                
-                .team-card.offline {
-                    border-color: #666666;
-                    opacity: 0.7;
-                }
-                
-                .last-seen {
-                    font-size: 10px;
-                    color: #888;
-                    margin-top: 5px;
-                }
-                
-                @keyframes pulse {
-                    0% { opacity: 1; }
-                    50% { opacity: 0.3; }
-                    100% { opacity: 1; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        function exportResults() {
-            const results = teamsData.map(team => ({
-                Équipe: team.name,
-                ID: team.id,
-                Énigmes: team.progress,
-                Temps: formatTime(team.time),
-                Tentatives: team.attempts,
-                Indices: team.hints,
-                Statut: team.status
-            }));
-
-            const csv = [
-                Object.keys(results[0]).join(','),
-                ...results.map(row => Object.values(row).join(','))
-            ].join('\n');
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `cyber-escape-results-${new Date().toISOString().slice(0, 10)}.csv`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function closeModal() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.style.display = 'none';
-            });
-        }
-
-        function viewTeam(teamId) {
-            // Ouvrir la vue de l'équipe dans un nouvel onglet
-            window.open(`game.html?team=${teamId}&admin=1`, '_blank');
-        }
-
-        function pauseTeam(teamId) {
-            const team = teamsData.find(t => t.id === teamId);
-            if (team) {
-                team.status = team.status === 'active' ? 'paused' : 'active';
-                renderTeams();
-            }
-        }
-
-        function resetAllGames() {
-            if (confirm('⚠️ Êtes-vous sûr de vouloir réinitialiser TOUS les jeux ?')) {
-                teamsData.forEach(team => {
-                    team.progress = 0;
-                    team.currentEnigma = 1;
-                    team.time = 0;
-                    team.attempts = 0;
-                    team.hints = 0;
-                    team.status = 'active';
-                });
-                globalTime = 30 * 60;
-                renderTeams();
-                broadcastSystemMessage('🔄 RESET COMPLET - Tous les jeux ont été réinitialisés');
-            }
-        }
-
-        function endGame() {
-            teamsData.forEach(team => {
-                team.status = 'completed';
-            });
-            renderTeams();
-            broadcastSystemMessage('⏰ TEMPS ÉCOULÉ ! Mission terminée.');
-            showLeaderboard();
-        }
-    </script>
+  <!-- 脚本顺序：i18n → common → 页面 locale → 数据 → 页面脚本（全部 defer，无 ES module） -->
+  <script defer src="js/i18n.js"></script>
+  <script defer src="js/locales/common.js"></script>
+  <script defer src="js/locales/admin.js"></script>
+  <script defer src="js/data/scenarios.js"></script>
+  <script defer src="js/data/enigmas-main.js"></script>
+  <script defer src="js/data/enigmas-classic.js"></script>
+  <script defer src="js/data/enigmas-alt.js"></script>
+  <script defer src="js/admin.js"></script>
 </body>
 </html>
