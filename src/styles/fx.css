@@ -347,7 +347,7 @@
 .fx-boot {
   --boot-ink: rgba(240, 243, 255, 0.92);
   --boot-dim: rgba(204, 212, 255, 0.62);
-  --boot-line: rgba(138, 107, 255, 0.42);
+  --boot-line: rgba(74, 78, 224, 0.42);
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -356,8 +356,8 @@
   padding: clamp(16px, 4vw, 40px);
   color: var(--boot-ink);
   background:
-    radial-gradient(120% 92% at 50% 0%, rgba(138, 107, 255, 0.18), transparent 62%),
-    radial-gradient(96% 74% at 84% 100%, rgba(75, 225, 255, 0.12), transparent 66%),
+    radial-gradient(120% 92% at 50% 0%, rgba(74, 78, 224, 0.18), transparent 62%),
+    radial-gradient(96% 74% at 84% 100%, rgba(74, 78, 224, 0.12), transparent 66%),
     rgba(11, 15, 36, 0.94);
   cursor: pointer;
   user-select: none;

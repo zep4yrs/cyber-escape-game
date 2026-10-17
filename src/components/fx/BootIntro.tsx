@@ -136,7 +136,7 @@ export function BootIntro({ onDone }: BootIntroProps) {
             {t('intro.bootLabel')}
             <span className="fx-boot__caret" />
           </span>
-          <span className="fx-boot__code mono">THUNDER ARCHIVE · TH-01</span>
+          <span className="fx-boot__code mono">MIST ARCHIVE · ARC-01</span>
         </div>
 
         <p className="fx-boot__name">{t('brand.name')}</p>

@@ -1,0 +1,308 @@
+/* ==========================================================================
+   全站统一层（最后加载）
+   —— 把上一轮混入的深色 HUD / 电光青紫 全部拉回 work.feng-qiao.top 的
+      浅色纸面 + 靛蓝体系；动效与细节保留，颜色语义统一。
+   ========================================================================== */
+
+/* ---------- 页面 HUD 带：浅纸面 ---------- */
+.page-band {
+  background: var(--hud-grad);
+  border-block: 1px solid var(--line);
+}
+
+.page-band::before {
+  background:
+    repeating-linear-gradient(0deg, rgba(22, 26, 58, 0.025) 0 1px, transparent 1px 24px),
+    radial-gradient(50% 140% at 82% 0%, rgba(74, 78, 224, 0.06), transparent 70%);
+}
+
+.page-band__item {
+  color: var(--ink-62);
+}
+
+.page-band__item i {
+  background: var(--brand);
+  box-shadow: none;
+}
+
+.page-band__item b {
+  color: var(--brand-deep);
+}
+
+.page-band__segments span {
+  background: var(--surface-3);
+}
+
+.page-band__segments span.is-on {
+  background: linear-gradient(90deg, var(--brand), var(--brand-bright));
+  box-shadow: none;
+}
+
+/* ---------- 威胁情报 ticker：浅纸面 ---------- */
+.ticker {
+  background: var(--hud-grad);
+  border-block: 1px solid var(--line);
+}
+
+.ticker::before {
+  background: linear-gradient(90deg, var(--bg), transparent);
+}
+
+.ticker::after {
+  background: linear-gradient(270deg, var(--bg), transparent);
+}
+
+.ticker__item {
+  color: var(--ink-62);
+}
+
+.ticker__item i {
+  background: var(--brand);
+  box-shadow: none;
+}
+
+.ticker__item b {
+  color: var(--brand-deep);
+}
+
+/* ---------- OPS 状态芯片：浅靛蓝 ---------- */
+.ops-chip {
+  border-color: var(--brand-line);
+  background: var(--brand-wash);
+  color: var(--brand-deep);
+}
+
+.ops-dot {
+  background: var(--brand);
+  box-shadow: none;
+}
+
+/* ---------- 术语表终端卡：浅色档案卡 ---------- */
+.glossary-teaser {
+  background: var(--card-grad);
+  border: 1px solid var(--brand-line);
+  box-shadow: var(--shadow-1);
+}
+
+.glossary-teaser::before {
+  background:
+    repeating-linear-gradient(0deg, rgba(22, 26, 58, 0.03) 0 1px, transparent 1px 28px),
+    radial-gradient(60% 120% at 85% 0%, rgba(74, 78, 224, 0.08), transparent 70%);
+}
+
+.glossary-teaser .eyebrow {
+  color: var(--brand-deep);
+}
+
+.glossary-teaser__prompt {
+  color: var(--ink-44);
+}
+
+.glossary-teaser__body {
+  color: var(--ink-62);
+}
+
+.glossary-teaser .btn--ghost {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  color: var(--brand-deep);
+}
+
+.glossary-teaser .btn--ghost:hover {
+  border-color: var(--brand-line);
+  background: var(--brand-wash);
+  color: var(--brand-deep);
+  box-shadow: var(--glow-soft);
+}
+
+/* ---------- 模块完成横幅：浅色档案卡 ---------- */
+.complete-banner {
+  border: 1px solid var(--brand-line);
+  background: var(--card-grad);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+}
+
+.complete-banner::before {
+  background: repeating-linear-gradient(90deg, rgba(22, 26, 58, 0.03) 0 1px, transparent 1px 22px);
+}
+
+.complete-banner__icon {
+  border-color: var(--brand-line);
+  background: var(--brand-wash);
+  color: var(--brand-deep);
+  box-shadow: none;
+}
+
+.complete-banner__title {
+  color: var(--ink);
+}
+
+.complete-banner__body {
+  color: var(--ink-62);
+}
+
+.complete-banner .btn {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.complete-banner .btn:hover {
+  background: var(--brand-deep);
+  border-color: var(--brand-deep);
+  color: #fff;
+  box-shadow: var(--shadow-brand);
+}
+
+/* ---------- 快捷键弹层：浅色纸面 ---------- */
+.scut-modal {
+  background: rgba(22, 26, 58, 0.28);
+  backdrop-filter: blur(6px);
+}
+
+.scut-panel {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-2);
+}
+
+.scut-panel__title {
+  color: var(--ink);
+}
+
+.shortcut {
+  border: 1px solid var(--line-soft);
+  background: var(--surface-2);
+  color: var(--ink-70);
+}
+
+.shortcut kbd {
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  background: var(--surface);
+  color: var(--ink-62);
+}
+
+.scut-panel .btn {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+/* ---------- 专注模式浮动按钮 ---------- */
+body.is-focus .focus-fab {
+  background: var(--surface);
+  color: var(--brand-deep);
+  border-color: var(--brand-line);
+  box-shadow: var(--shadow-1);
+}
+
+/* ---------- 开屏 Boot：浅色纸面版本 ---------- */
+.fx-boot {
+  background: rgba(242, 245, 253, 0.94);
+  color: var(--ink);
+}
+
+.fx-boot__frame {
+  border: 1px solid var(--line-strong);
+  background: var(--panel-grad);
+  box-shadow: var(--shadow-2);
+}
+
+.fx-boot__frame::before {
+  border: 1px solid var(--brand-line);
+}
+
+.fx-boot__frame::after {
+  background: linear-gradient(90deg, var(--brand), var(--brand-bright));
+  box-shadow: none;
+}
+
+.fx-boot__label {
+  color: var(--ink-62);
+}
+
+.fx-boot__name {
+  color: var(--ink);
+}
+
+.fx-boot__code {
+  color: var(--brand-deep);
+}
+
+.fx-boot__glyphs {
+  color: var(--brand-deep);
+  opacity: 0.62;
+}
+
+.fx-boot__caret {
+  background: var(--brand);
+}
+
+.fx-boot__bar {
+  background: var(--surface-3);
+}
+
+.fx-boot__bar-fill {
+  background: linear-gradient(90deg, var(--brand), var(--brand-bright));
+  box-shadow: none;
+}
+
+.fx-boot__status {
+  color: var(--ink-44);
+}
+
+.fx-boot__status b {
+  color: var(--brand-deep);
+}
+
+.fx-boot__skip {
+  color: var(--brand-deep);
+}
+
+.fx-boot__esc {
+  border: 1px solid var(--line-strong);
+  color: var(--ink-62);
+  background: var(--surface);
+}
+
+.fx-boot__hint {
+  color: var(--ink-44);
+}
+
+/* ---------- Hero 竖线 / 扫描线 / 徽章 ---------- */
+.hero__badge {
+  border: 1px solid var(--line);
+  background: var(--panel-grad);
+  color: var(--ink-62);
+}
+
+.hero__badge i {
+  background: var(--brand);
+  box-shadow: none;
+}
+
+.hero__scan::after {
+  background: linear-gradient(90deg, transparent, var(--brand), transparent);
+  filter: none;
+}
+
+.hero__panel {
+  box-shadow: var(--shadow-2);
+}
+
+/* ---------- 页脚遥测 ---------- */
+.footer__telemetry i {
+  background: var(--brand);
+  box-shadow: none;
+}
+
+/* ---------- 减少动态偏好 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .hero__scan::after,
+  .ticker__track {
+    animation: none !important;
+  }
+}

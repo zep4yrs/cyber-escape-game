@@ -143,6 +143,29 @@ function ModuleContent() {
         <span className="readbar__fill" style={{ width: `${readPct}%` }} />
       </div>
 
+      <div className="page-band modulehud">
+        <div className="shell page-band__inner">
+          <span className="page-band__item">
+            <i />
+            MODULE // {module.code}
+          </span>
+          <span className="page-band__item">
+            LESSONS <b>{module.lessons.length}</b>
+          </span>
+          <span className="page-band__item">
+            PROGRESS <b>{progress.percent}%</b>
+          </span>
+          <span className="page-band__item">
+            READ <b>{readPct}%</b>
+          </span>
+          <span className="page-band__segments" aria-hidden="true">
+            {module.lessons.map((lesson, i) => (
+              <span key={lesson.id} className={i < Math.ceil(progress.percent / (100 / module.lessons.length)) ? 'is-on' : undefined} />
+            ))}
+          </span>
+        </div>
+      </div>
+
       <div className="shell">
         <nav className="crumbs" aria-label={t('common.backHome')}>
           <Link to="/">{t('common.backHome')}</Link>

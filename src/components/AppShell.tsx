@@ -82,7 +82,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <div className="shell footer__bottom">
           <span className="mono">OP-2026 · LEARNING PATH</span>
-          <span className="mono">THUNDER ARCHIVE // v2</span>
+          <span className="mono">MIST ARCHIVE // v2</span>
         </div>
       </footer>
     </>

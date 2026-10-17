@@ -9,6 +9,7 @@ import './styles/thunder.css';
 import './styles/base.css';
 import './styles/app.css';
 import './styles/thunder-ui.css';
+import './styles/unify.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

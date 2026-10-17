@@ -31,8 +31,8 @@
   padding: 6px 10px;
   border: 1px solid var(--thunder-line);
   border-radius: var(--r-sm);
-  background: rgba(75, 225, 255, 0.07);
-  color: #0b7185;
+  background: rgba(74, 78, 224, 0.07);
+  color: #4a4ee0;
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.16em;
@@ -51,7 +51,7 @@
 .topnav__link.is-active::after {
   height: 2px;
   background: linear-gradient(90deg, var(--volt), var(--thunder));
-  box-shadow: 0 0 10px rgba(75, 225, 255, 0.55);
+  box-shadow: 0 0 10px rgba(74, 78, 224, 0.55);
 }
 
 /* ---------- hero ---------- */
@@ -304,7 +304,7 @@
   width: 96px;
   height: 1px;
   background: linear-gradient(90deg, var(--volt), var(--thunder), transparent);
-  box-shadow: 0 0 12px rgba(75, 225, 255, 0.4);
+  box-shadow: 0 0 12px rgba(74, 78, 224, 0.4);
 }
 
 .section-head__code {
@@ -364,7 +364,7 @@
   inset: 0;
   background:
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 28px),
-    radial-gradient(60% 120% at 85% 0%, rgba(75, 225, 255, 0.16), transparent 70%);
+    radial-gradient(60% 120% at 85% 0%, rgba(74, 78, 224, 0.16), transparent 70%);
   pointer-events: none;
 }
 
@@ -390,13 +390,13 @@
 .glossary-teaser .btn--ghost {
   position: relative;
   z-index: 2;
-  background: rgba(75, 225, 255, 0.1);
+  background: rgba(74, 78, 224, 0.1);
   border-color: var(--thunder-line);
   color: var(--thunder);
 }
 
 .glossary-teaser .btn--ghost:hover {
-  background: rgba(75, 225, 255, 0.18);
+  background: rgba(74, 78, 224, 0.18);
   border-color: var(--thunder);
   color: #fff;
   box-shadow: var(--glow-thunder);
@@ -418,7 +418,7 @@
   display: block;
   height: 100%;
   background: linear-gradient(90deg, var(--volt), var(--thunder));
-  box-shadow: 0 0 12px rgba(75, 225, 255, 0.6);
+  box-shadow: 0 0 12px rgba(74, 78, 224, 0.6);
   transition: width 0.12s linear;
 }
 
@@ -565,7 +565,7 @@ body.is-focus .focus-fab {
   border-radius: var(--r-sm);
   color: var(--thunder);
   flex: none;
-  box-shadow: inset 0 0 18px rgba(75, 225, 255, 0.2);
+  box-shadow: inset 0 0 18px rgba(74, 78, 224, 0.2);
 }
 
 .complete-banner__title {
@@ -584,13 +584,13 @@ body.is-focus .focus-fab {
 .complete-banner .btn {
   position: relative;
   z-index: 2;
-  background: rgba(75, 225, 255, 0.14);
+  background: rgba(74, 78, 224, 0.14);
   border-color: var(--thunder-line);
   color: var(--thunder);
 }
 
 .complete-banner .btn:hover {
-  background: rgba(75, 225, 255, 0.24);
+  background: rgba(74, 78, 224, 0.24);
   color: #fff;
   box-shadow: var(--glow-thunder);
 }
@@ -645,7 +645,7 @@ body.is-focus .focus-fab {
 
 .scut-panel .btn {
   margin-top: 18px;
-  background: rgba(75, 225, 255, 0.14);
+  background: rgba(74, 78, 224, 0.14);
   border-color: var(--thunder-line);
   color: var(--thunder);
 }
@@ -842,7 +842,7 @@ body.is-focus .focus-fab {
 /* ---------- 模块工具栏 / 阅读页细节 ---------- */
 .crumbs__pct {
   margin-left: auto;
-  color: #0b7185;
+  color: #4a4ee0;
   font-size: 10px;
   letter-spacing: 0.14em;
 }
@@ -996,4 +996,280 @@ body.is-focus .focus-fab {
 /* ---------- 模块卡反馈 ---------- */
 .mcard + .mcard {
   margin-top: 0;
+}
+
+
+/* ==========================================================================
+   页面统一 HUD 带（术语表 / 综合演练 / 模块页）
+   ========================================================================== */
+.page-band {
+  position: relative;
+  background: var(--hud-grad);
+  border-block: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.page-band::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 24px),
+    radial-gradient(50% 140% at 82% 0%, rgba(74, 78, 224, 0.16), transparent 70%);
+}
+
+.page-band__inner {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 26px;
+  padding-block: 11px;
+}
+
+.page-band__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(235, 240, 255, 0.62);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.page-band__item i {
+  width: 5px;
+  height: 5px;
+  background: var(--thunder);
+  box-shadow: 0 0 8px var(--thunder);
+  flex: none;
+}
+
+.page-band__item b {
+  color: var(--thunder);
+  font-weight: 500;
+}
+
+.page-band__segments {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: auto;
+}
+
+.page-band__segments span {
+  width: 22px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.page-band__segments span.is-on {
+  background: linear-gradient(90deg, var(--volt), var(--thunder));
+  box-shadow: 0 0 8px rgba(74, 78, 224, 0.45);
+}
+
+/* ---------- 统一页头（术语表 / 综合演练） ---------- */
+.pagehead--thunder {
+  position: relative;
+  padding-block: 34px 30px;
+  max-width: 82ch;
+}
+
+.pagehead--thunder h1 {
+  margin-top: 12px;
+  font-size: clamp(34px, 4.2vw, 54px);
+  line-height: 1.16;
+  background: linear-gradient(100deg, var(--brand-deep) 8%, var(--volt) 54%, var(--volt-deep) 96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.pagehead--thunder h1::after {
+  content: '';
+  display: block;
+  width: 96px;
+  height: 2px;
+  margin-top: 18px;
+  background: linear-gradient(90deg, var(--volt), var(--thunder));
+  box-shadow: 0 0 14px rgba(74, 78, 224, 0.5);
+}
+
+.pagehead--thunder .lede {
+  margin-top: 16px;
+}
+
+/* ---------- 术语表页统一 ---------- */
+.glossarypage {
+  padding-bottom: 40px;
+}
+
+.glossary-tools {
+  position: sticky;
+  top: calc(var(--head-h) + 8px);
+  z-index: 12;
+  display: grid;
+  gap: 14px;
+  margin-block: 8px 26px;
+  padding: 16px 18px;
+  background: var(--panel-grad);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+}
+
+.glossary-tools::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--volt), var(--thunder), transparent 72%);
+}
+
+.chip.is-active {
+  border-color: var(--volt-line);
+  background: var(--volt-soft);
+  color: var(--volt-deep);
+  box-shadow: var(--glow-soft);
+}
+
+.glossary-list {
+  counter-reset: gloss;
+}
+
+.glossary-item {
+  counter-increment: gloss;
+  position: relative;
+  padding-left: 52px;
+  transition: background var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out);
+}
+
+.glossary-item::before {
+  content: counter(gloss, decimal-leading-zero);
+  position: absolute;
+  left: 2px;
+  top: 22px;
+  color: var(--ink-44);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.glossary-item:hover {
+  background: linear-gradient(90deg, var(--brand-wash), transparent 68%);
+  border-top-color: var(--volt-line);
+}
+
+.glossary-item__term {
+  background: linear-gradient(100deg, var(--ink), var(--brand-deep) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- 模块页 HUD 带 ---------- */
+.modulehud {
+  margin-bottom: 18px;
+}
+
+/* 模块标题的档案框 */
+.modulehead h1 {
+  position: relative;
+  padding-left: 18px;
+}
+
+.modulehead h1::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12%;
+  width: 4px;
+  height: 76%;
+  background: linear-gradient(180deg, var(--volt), var(--thunder));
+  box-shadow: 0 0 14px rgba(74, 78, 224, 0.4);
+}
+
+/* 模块页 lesson 头部更硬 */
+.lesson__head {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.lesson__num {
+  color: var(--volt-deep);
+}
+
+/* ---------- 综合演练页 HUD 带 ---------- */
+.challengepage .hero__coords {
+  margin-bottom: 8px;
+}
+
+.challengepage .page-band {
+  margin-bottom: 6px;
+}
+
+/* ---------- 加载态雷霆化 ---------- */
+.route-fallback__bar {
+  background: linear-gradient(90deg, var(--surface-3) 0%, var(--volt-soft) 40%, var(--surface-3) 80%);
+  background-size: 200% 100%;
+  animation: routeShimmer 1.2s linear infinite;
+}
+
+@keyframes routeShimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -80% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-fallback__bar {
+    animation: none;
+    background: var(--surface-3);
+  }
+}
+
+@media (max-width: 720px) {
+  .glossary-item {
+    padding-left: 34px;
+  }
+
+  .glossary-item::before {
+    top: 18px;
+  }
+
+  .glossary-tools {
+    position: static;
+  }
+
+  .page-band__segments {
+    display: none;
+  }
+}
+
+
+.glossary-count {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .glossary-count {
+    text-align: left;
+  }
+
+  .modulehead h1 {
+    padding-left: 14px;
+  }
+
+  .page-band__inner {
+    gap: 8px 14px;
+  }
 }

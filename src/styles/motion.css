@@ -114,7 +114,7 @@
 }
 
 .thunder-ring__arc {
-  filter: drop-shadow(0 0 5px rgba(75, 225, 255, 0.45));
+  filter: drop-shadow(0 0 5px rgba(74, 78, 224, 0.45));
   transition: stroke-dashoffset 1.15s var(--ease-thunder);
 }
 
@@ -282,9 +282,9 @@
   background: linear-gradient(
     105deg,
     transparent 0%,
-    rgba(138, 107, 255, 0.18) 34%,
-    rgba(75, 225, 255, 0.42) 49%,
-    rgba(138, 107, 255, 0.16) 64%,
+    rgba(74, 78, 224, 0.18) 34%,
+    rgba(74, 78, 224, 0.42) 49%,
+    rgba(74, 78, 224, 0.16) 64%,
     transparent 100%
   );
   transform: translate3d(-160%, 0, 0) skewX(-12deg);
@@ -306,7 +306,7 @@
   border-radius: 50%;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(circle, rgba(75, 225, 255, 0.2), rgba(138, 107, 255, 0.11) 46%, transparent 68%);
+  background: radial-gradient(circle, rgba(74, 78, 224, 0.2), rgba(74, 78, 224, 0.11) 46%, transparent 68%);
   transform: translate3d(var(--gx), var(--gy), 0);
   transition: opacity 0.35s var(--ease-out);
 }
@@ -333,7 +333,7 @@
 }
 
 .mcard:hover .mcard__ghost {
-  color: rgba(138, 107, 255, 0.16);
+  color: rgba(74, 78, 224, 0.16);
   transform: rotate(-4deg) scale(1.02);
 }
 
@@ -382,15 +382,15 @@
   border-radius: 50%;
   background: var(--thunder);
   box-shadow:
-    0 0 0 1px rgba(75, 225, 255, 0.5),
-    0 0 10px rgba(75, 225, 255, 0.75);
+    0 0 0 1px rgba(74, 78, 224, 0.5),
+    0 0 10px rgba(74, 78, 224, 0.75);
 }
 
 .mcard[data-status='active'] .mcard__lamp {
   background: var(--volt);
   box-shadow:
     0 0 0 1px var(--volt-line),
-    0 0 10px rgba(138, 107, 255, 0.7);
+    0 0 10px rgba(74, 78, 224, 0.7);
 }
 
 .mcard[data-status='done'] .mcard__lamp {
@@ -493,7 +493,7 @@
   transform-origin: left center;
   transform: scaleX(var(--p, 0));
   background: linear-gradient(90deg, var(--brand) 0%, var(--volt) 52%, var(--thunder) 100%);
-  box-shadow: 0 0 10px rgba(138, 107, 255, 0.45);
+  box-shadow: 0 0 10px rgba(74, 78, 224, 0.45);
   transition: transform 0.95s var(--ease-thunder);
 }
 

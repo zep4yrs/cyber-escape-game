@@ -126,7 +126,7 @@ export function ModuleCard({
       <span className="mcard__head">
         <span className="mcard__code mono">
           <span className="mcard__lamp" aria-hidden="true" />
-          {module.code} · THUNDER ARCHIVE
+          {module.code} · MIST ARCHIVE
         </span>
         <span className={['tag', 'mcard__status', statusTone].filter(Boolean).join(' ')}>{statusLabel}</span>
       </span>
