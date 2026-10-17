@@ -106,7 +106,7 @@ for fname, meta in sorted(needed.items()):
         "  font-style: normal;\n"
         f"  font-weight: {meta['weight']};\n"
         "  font-display: swap;\n"
-        f"  src: url('../assets/fonts/{fname}') format('woff2');\n"
+        f"  src: url('./{fname}') format('woff2');\n"
         f"  unicode-range: {meta['ranges']};\n"
         "}\n"
     )
