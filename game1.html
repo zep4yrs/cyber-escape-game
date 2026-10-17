@@ -30,6 +30,23 @@
       padding-bottom: clamp(24px, 3vw, 44px);
     }
 
+    .g-welcome__grid > .g-onboard {
+      grid-column: 1 / -1;
+      margin-top: 0;
+    }
+
+    /* 桌面：标题在左、规则在右，新手引导占下一整行；移动端按 DOM 顺序（标题 → 引导 → 规则） */
+    @media (min-width: 901px) {
+      .g-welcome__grid > .g-welcome__side {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .g-welcome__grid > .g-onboard {
+        grid-row: 2;
+      }
+    }
+
     .g-welcome__grid {
       display: grid;
       grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
@@ -195,6 +212,488 @@
       line-height: 1.8;
     }
 
+    /* ---------- 新手引导 ---------- */
+    .g-onboard {
+      margin-top: clamp(18px, 2.4vw, 28px);
+      padding: clamp(18px, 2.2vw, 24px) clamp(18px, 2.6vw, 28px);
+      border: 1px solid var(--brand-line);
+      border-left: 2px solid var(--brand);
+      background: var(--brand-wash);
+    }
+
+    .g-onboard__head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .g-onboard__kicker {
+      color: var(--brand);
+      font-size: var(--t-mono);
+      letter-spacing: 0.16em;
+    }
+
+    .g-onboard__id {
+      margin-left: auto;
+      color: var(--ink-44);
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+    }
+
+    .g-onboard__dismiss {
+      flex: none;
+      padding: 4px 0;
+      color: var(--ink-44);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: none;
+    }
+
+    .g-onboard__list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(14px, 2.2vw, 28px);
+    }
+
+    .g-onboard__item {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+
+    .g-onboard__n {
+      padding-top: 3px;
+      color: var(--brand);
+      font-size: 10.5px;
+      letter-spacing: 0.12em;
+    }
+
+    .g-onboard__t {
+      margin-bottom: 2px;
+      font-family: var(--font-display);
+      font-size: var(--t-small);
+      line-height: 1.55;
+      color: var(--ink);
+    }
+
+    .g-onboard__b {
+      font-size: 13.5px;
+      line-height: 1.8;
+      color: var(--ink-62);
+    }
+
+    /* ---------- 知识卡 / 跟我做一遍 ---------- */
+    .g-learn,
+    .g-walk {
+      margin-top: clamp(14px, 1.8vw, 20px);
+      border: 1px solid var(--line-strong);
+      background: var(--surface-2);
+    }
+
+    .g-learn {
+      border-left: 2px solid var(--brand);
+      background: var(--brand-wash);
+    }
+
+    .g-learn__toggle,
+    .g-walk__toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 16px;
+      text-align: left;
+      transition: background 0.25s var(--ease-out);
+    }
+
+    .g-learn__toggle:hover,
+    .g-walk__toggle:hover {
+      background: var(--brand-soft);
+    }
+
+    .g-learn__badge,
+    .g-walk__badge {
+      flex: none;
+      padding: 3px 8px;
+      border: 1px solid var(--brand-line);
+      background: var(--surface);
+      color: var(--brand);
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+      white-space: nowrap;
+    }
+
+    .g-walk__badge {
+      border-color: var(--line-strong);
+      color: var(--ink-62);
+    }
+
+    .g-learn__title,
+    .g-walk__title {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-family: var(--font-display);
+      font-size: var(--t-small);
+      line-height: 1.5;
+      color: var(--ink);
+    }
+
+    .g-learn__icon,
+    .g-walk__icon {
+      flex: none;
+      margin-left: auto;
+      color: var(--ink-44);
+      transition: transform 0.3s var(--ease-out);
+    }
+
+    .g-learn__toggle[aria-expanded='true'] .g-learn__icon,
+    .g-walk__toggle[aria-expanded='true'] .g-walk__icon {
+      transform: rotate(180deg);
+    }
+
+    .g-learn__body,
+    .g-walk__body {
+      padding: 0 16px 16px;
+    }
+
+    .g-learn__goal {
+      padding-top: 12px;
+      border-top: 1px solid var(--line-soft);
+      font-size: var(--t-small);
+      line-height: 1.8;
+      color: var(--ink-80);
+    }
+
+    .g-learn__cols {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(14px, 2.6vw, 32px);
+      margin-top: 14px;
+    }
+
+    .g-learn__k {
+      margin-bottom: 7px;
+      color: var(--ink-44);
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+    }
+
+    .g-learn__points,
+    .g-learn__steps {
+      display: grid;
+      gap: 8px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--ink-62);
+    }
+
+    .g-learn__points li {
+      position: relative;
+      padding-left: 15px;
+    }
+
+    .g-learn__points li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.78em;
+      width: 6px;
+      height: 6px;
+      background: var(--brand-line);
+    }
+
+    .g-learn__steps {
+      counter-reset: learnstep;
+    }
+
+    .g-learn__steps li {
+      counter-increment: learnstep;
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .g-learn__steps li::before {
+      content: counter(learnstep);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.9;
+      color: var(--brand);
+    }
+
+    .g-walk {
+      border-style: dashed;
+    }
+
+    .g-walk__body {
+      padding-top: 12px;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .g-walk__lead {
+      margin-bottom: 10px;
+      font-size: 13.5px;
+      line-height: 1.8;
+      color: var(--ink-62);
+    }
+
+    .g-walk__steps {
+      counter-reset: walkstep;
+      display: grid;
+      gap: 10px;
+    }
+
+    .g-walk__steps li {
+      counter-increment: walkstep;
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 9px;
+      font-size: 13.5px;
+      line-height: 1.8;
+      color: var(--ink-80);
+    }
+
+    .g-walk__steps li::before {
+      content: counter(walkstep);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--brand);
+      line-height: 1.9;
+    }
+
+    .g-walk__steps strong {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-44);
+      font-weight: 400;
+      margin-bottom: 2px;
+    }
+
+    .g-walk__closing {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line-soft);
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--brand);
+    }
+
+    /* ---------- 方向提示 ---------- */
+    .g-nudge {
+      display: grid;
+      gap: 3px;
+      margin-top: 10px;
+      padding: 11px 14px;
+      border-left: 2px solid var(--warn);
+      background: var(--warn-soft);
+    }
+
+    .g-nudge__k {
+      color: var(--warn);
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+    }
+
+    .g-nudge__text {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--ink-80);
+    }
+
+    /* ---------- 学习工具 ---------- */
+    .g-toolbox {
+      margin-top: clamp(14px, 1.8vw, 20px);
+      border-top: 1px solid var(--line);
+    }
+
+    .g-toolbox__summary {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding: 12px 0;
+      cursor: pointer;
+      list-style: none;
+      transition: color 0.25s var(--ease-out);
+    }
+
+    .g-toolbox__summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .g-toolbox__summary:hover {
+      color: var(--ink);
+    }
+
+    .g-toolbox__badge {
+      flex: none;
+      padding: 3px 8px;
+      border: 1px solid var(--brand-line);
+      background: var(--surface);
+      color: var(--brand);
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+    }
+
+    .g-toolbox__text {
+      font-size: var(--t-small);
+      color: var(--ink-62);
+      line-height: 1.6;
+    }
+
+    .g-toolbox__icon {
+      margin-left: auto;
+      color: var(--ink-44);
+      transition: transform 0.3s var(--ease-out);
+    }
+
+    .g-toolbox[open] .g-toolbox__icon {
+      transform: rotate(180deg);
+    }
+
+    .g-toolbox__body {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: clamp(16px, 2.6vw, 30px);
+      padding: 8px 0 20px;
+    }
+
+    .g-tool {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .g-tool__title {
+      color: var(--ink-44);
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+    }
+
+    .g-tool__field {
+      padding: 10px 12px;
+      font-size: var(--t-small);
+      min-height: 42px;
+    }
+
+    textarea.g-tool__field {
+      min-height: 62px;
+      resize: vertical;
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+      line-height: 1.6;
+    }
+
+    .g-tool__out {
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px dashed var(--line-strong);
+      background: var(--surface);
+      font-family: var(--font-mono);
+      font-size: var(--t-small);
+      letter-spacing: 0.05em;
+      line-height: 1.7;
+      color: var(--ink);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .g-tool__hint {
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--ink-44);
+    }
+
+    .g-letters {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+      gap: 4px;
+    }
+
+    .g-letters span {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 4px;
+      padding: 4px 2px;
+      border: 1px solid var(--line-soft);
+      background: var(--surface);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-44);
+    }
+
+    .g-letters b {
+      font-weight: 400;
+      color: var(--ink);
+      letter-spacing: 0.06em;
+    }
+
+    .g-ascii-more {
+      margin-top: 2px;
+    }
+
+    .g-ascii-more summary {
+      display: flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 0;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .g-ascii-more summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .g-ascii-more summary::after {
+      content: ' ↓';
+      color: var(--ink-44);
+    }
+
+    .g-ascii-more[open] summary::after {
+      content: ' ↑';
+    }
+
+    .g-ascii-table {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+      gap: 3px;
+      margin-top: 8px;
+    }
+
+    .g-ascii-table span {
+      display: grid;
+      justify-items: center;
+      padding: 4px 2px;
+      border: 1px solid var(--line-soft);
+      background: var(--surface);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      line-height: 1.5;
+      color: var(--ink-44);
+    }
+
+    .g-ascii-table b {
+      font-weight: 400;
+      color: var(--ink);
+    }
+
+    @media (max-width: 900px) {
+      .g-onboard__list {
+        grid-template-columns: 1fr;
+      }
+
+      .g-learn__cols {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* ---------- 顶部 HUD ---------- */
     .g-stage {
       padding-bottom: clamp(16px, 2.4vw, 30px);
@@ -350,7 +849,7 @@
       font-family: var(--font-mono);
       font-size: var(--t-mono);
       letter-spacing: 0.12em;
-      color: var(--ink-28);
+      color: var(--ink-44);
     }
 
     .g-index__t {
@@ -367,7 +866,7 @@
       font-size: 10px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--ink-28);
+      color: var(--ink-44);
     }
 
     .g-index__item[data-state='done'] {
@@ -918,6 +1417,38 @@
             </div>
           </div>
 
+        <!-- 新手引导：第一次行动时的三步上手 -->
+        <section class="g-onboard" id="onboard" aria-labelledby="onboardTitle">
+          <div class="g-onboard__head">
+            <p class="mono g-onboard__kicker" id="onboardTitle" data-i18n="game.onboard.title">第一次行动？三步上手</p>
+            <span class="mono g-onboard__id">START-01</span>
+            <button class="btn btn--quiet btn--sm g-onboard__dismiss" type="button" id="onboardDismiss" data-i18n="game.onboard.dismiss">知道了</button>
+          </div>
+          <ol class="g-onboard__list">
+            <li class="g-onboard__item">
+              <span class="mono g-onboard__n">01</span>
+              <div>
+                <p class="g-onboard__t" data-i18n="game.onboard.1.title">先读知识卡</p>
+                <p class="g-onboard__b" data-i18n="game.onboard.1.body">每关题面上方都有一张「知识卡」：这题练什么、三步怎么下手。卡住了先看它。</p>
+              </div>
+            </li>
+            <li class="g-onboard__item">
+              <span class="mono g-onboard__n">02</span>
+              <div>
+                <p class="g-onboard__t" data-i18n="game.onboard.2.title">工具就在页面上</p>
+                <p class="g-onboard__b" data-i18n="game.onboard.2.body">答题区下方有学习工具：ROT-13 解码、字母序号表、ASCII 查询，随时可用。</p>
+              </div>
+            </li>
+            <li class="g-onboard__item">
+              <span class="mono g-onboard__n">03</span>
+              <div>
+                <p class="g-onboard__t" data-i18n="game.onboard.3.title">答错也有方向</p>
+                <p class="g-onboard__b" data-i18n="game.onboard.3.body">前两次答错不扣分，还会给方向提示；需要更具体的线索再点「提示」。</p>
+              </div>
+            </li>
+          </ol>
+        </section>
+
           <aside class="g-welcome__side">
             <div class="plate plate--flat g-rules">
               <div class="g-rules__head">
@@ -933,6 +1464,8 @@
             </div>
           </aside>
         </div>
+
+
 
         <div class="g-startbar">
           <form class="g-startbar__form" id="teamForm" novalidate>
@@ -1007,6 +1540,42 @@
                 <p class="lede g-enigma__brief" id="enigmaBrief"></p>
               </div>
 
+              <!-- 知识卡：本题考什么 + 三步怎么下手（默认折叠，首关自动展开一次） -->
+              <div class="g-learn" id="learnCard" hidden>
+                <button class="g-learn__toggle" type="button" id="learnToggle" aria-expanded="false" aria-controls="learnBody">
+                  <span class="mono g-learn__badge" data-i18n="game.learn.badge">知识卡</span>
+                  <span class="g-learn__title" id="learnTitle"></span>
+                  <span class="arw g-learn__icon" data-dir="s" aria-hidden="true">↓</span>
+                </button>
+                <div class="g-learn__body" id="learnBody" hidden>
+                  <p class="g-learn__goal" id="learnGoal"></p>
+                  <div class="g-learn__cols">
+                    <div>
+                      <p class="g-learn__k mono" data-i18n="game.learn.points">三个要点</p>
+                      <ul class="g-learn__points" id="learnPoints"></ul>
+                    </div>
+                    <div>
+                      <p class="g-learn__k mono" data-i18n="game.learn.steps">怎么下手</p>
+                      <ol class="g-learn__steps" id="learnSteps"></ol>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 首个关卡的「跟我做一遍」示范 -->
+              <div class="g-walk" id="walkCard" hidden>
+                <button class="g-walk__toggle" type="button" id="walkToggle" aria-expanded="false" aria-controls="walkBody">
+                  <span class="mono g-walk__badge" data-i18n="game.walk.badge">示例</span>
+                  <span class="g-walk__title" id="walkTitle"></span>
+                  <span class="arw g-walk__icon" data-dir="s" aria-hidden="true">↓</span>
+                </button>
+                <div class="g-walk__body" id="walkBody" hidden>
+                  <p class="g-walk__lead" id="walkLead"></p>
+                  <ol class="g-walk__steps" id="walkSteps"></ol>
+                  <p class="g-walk__closing" id="walkClosing"></p>
+                </div>
+              </div>
+
               <div class="g-enigma__content mission-body" id="enigmaContent"></div>
 
               <div class="g-enigma__work" id="answerArea">
@@ -1038,7 +1607,48 @@
                 <ul class="g-hints" id="hints" aria-live="polite"></ul>
               </div>
 
+              <!-- 学习工具：纯本地计算，方便自己动手验证 -->
+              <details class="g-toolbox" id="toolbox">
+                <summary class="g-toolbox__summary">
+                  <span class="mono g-toolbox__badge" data-i18n="game.tools.badge">学习工具</span>
+                  <span class="g-toolbox__text" data-i18n="game.tools.summary">ROT-13 解码 · 字母序号表 · ASCII 查询</span>
+                  <span class="arw g-toolbox__icon" data-dir="s" aria-hidden="true">↓</span>
+                </summary>
+                <div class="g-toolbox__body">
+                  <section class="g-tool" aria-labelledby="rot13Title">
+                    <p class="mono g-tool__title" id="rot13Title" data-i18n="game.tools.rot13.title">ROT-13 解码</p>
+                    <label class="sr" for="rot13Input" data-i18n="game.tools.rot13.input">输入要解码的字母</label>
+                    <textarea class="input g-tool__field" id="rot13Input" rows="2" spellcheck="false" autocomplete="off" placeholder="粘贴密文，例如 ERFRPHEVGL" data-i18n-attr="placeholder:game.tools.rot13.placeholder"></textarea>
+                    <p class="g-tool__out" id="rot13Out" aria-live="polite"></p>
+                    <p class="g-tool__hint" data-i18n="game.tools.rot13.hint">每个字母向后（或向前）挪 13 位；数字、符号和中文不变。解码两次会回到原文。</p>
+                  </section>
+
+                  <section class="g-tool" aria-labelledby="lettersTitle">
+                    <p class="mono g-tool__title" id="lettersTitle" data-i18n="game.tools.letters.title">字母序号表</p>
+                    <div class="g-letters" id="letterTable" role="list" aria-label="字母序号表 A=1 到 Z=26"></div>
+                    <p class="g-tool__hint" data-i18n="game.tools.letters.hint">A=1、B=2……Z=26；反过来，12 就是 L。</p>
+                  </section>
+
+                  <section class="g-tool" aria-labelledby="asciiTitle">
+                    <p class="mono g-tool__title" id="asciiTitle" data-i18n="game.tools.ascii.title">ASCII 查询</p>
+                    <label class="sr" for="asciiInput" data-i18n="game.tools.ascii.input">输入一个字符或数字</label>
+                    <input class="input g-tool__field" id="asciiInput" type="text" maxlength="3" autocomplete="off" spellcheck="false" placeholder="字符或数字，例如 C 或 67" data-i18n-attr="placeholder:game.tools.ascii.placeholder">
+                    <p class="g-tool__out" id="asciiResult" aria-live="polite"></p>
+                    <details class="g-ascii-more">
+                      <summary class="g-tool__hint" data-i18n="game.tools.ascii.tableTitle">展开 32–126 可打印字符表</summary>
+                      <div class="g-ascii-table" id="asciiTable" role="list"></div>
+                    </details>
+                  </section>
+                </div>
+              </details>
+
               <div class="g-feedback" id="feedback" role="status" aria-live="polite" hidden></div>
+
+              <!-- 方向提示：答错时出现，不给答案 -->
+              <div class="g-nudge" id="nudge" role="status" aria-live="polite" hidden>
+                <span class="g-nudge__k mono" data-i18n="game.feedback.nudgeLabel">方向提示</span>
+                <span class="g-nudge__text" id="nudgeText"></span>
+              </div>
 
               <div class="g-solved" id="solvedPanel" hidden>
                 <div class="g-solved__head">

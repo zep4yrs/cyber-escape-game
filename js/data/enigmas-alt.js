@@ -15,6 +15,96 @@ Object.assign(window.ENIGMAS, {
     key: 'pwd_protocol',
     code: 'EN-01',
     tag: { zh: '口令编码', en: 'Password', fr: 'Mot de passe' },
+    learn: {
+      title: {
+        zh: '五位数字查表',
+        en: 'French five-dice words',
+        fr: 'Table des cinq dés'
+      },
+      goal: {
+        zh: '读完这张卡，你会把密文按 5 位切组、逐组查编码表，再按顺序连成口令。',
+        en: 'After this card you can split a digit sequence into groups of five and look each group up in the French word list.',
+        fr: 'Après cette fiche, vous saurez découper une séquence de chiffres en groupes de cinq et chercher chaque groupe dans la table française.'
+      },
+      points: {
+        zh: [
+          '编码表把 5 位数字和一个汉字一一对应，像一本小型字典。',
+          '密文要先每 5 位切一刀，切出来的每一组才算一个编码。',
+          '可迁移：固定编码表不是加密，口令应当随机生成并妥善保管。'
+        ],
+        en: [
+          'The five-dice method maps each five-digit group to one French word.',
+          'Cut the sequence into groups of exactly five digits before looking anything up.',
+          'Practice: a fixed codebook is not encryption; generate random passwords and store them safely.'
+        ],
+        fr: [
+          'La méthode des cinq dés associe chaque groupe de cinq chiffres à un mot français.',
+          'Découpez la séquence en groupes de cinq chiffres avant toute recherche.',
+          'À retenir : une table fixe n’est pas un chiffrement ; générez des mots de passe aléatoires.'
+        ]
+      },
+      steps: {
+        zh: [
+          '把启动序列抄下来，从左到右每 5 位画一条竖线。',
+          '拿每组数字去《口令编码表》里找相同编码，抄下它右边的汉字。',
+          '把抄下的汉字按组序连起来，就是口令。'
+        ],
+        en: [
+          'Write the digit sequence down and mark a cut every five digits.',
+          'Find each five-digit group in the French five-dice word list.',
+          'Write the five words in sequence order, in capitals, separated by spaces.'
+        ],
+        fr: [
+          'Recopiez la séquence de chiffres et marquez une coupure tous les cinq chiffres.',
+          'Cherchez chaque groupe de cinq chiffres dans la table française de la méthode à 5 dés.',
+          'Écrivez les cinq mots dans l’ordre, en majuscules et séparés par des espaces.'
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '先只做切分：25 位数字每 5 位一组，应该得到 5 组，别让相邻两组粘在一起。',
+        '对每组数字，在编码表「编码」列找到完全相同的 5 位数，抄它右边的汉字，再按组序排好。'
+      ],
+      en: [
+        'Before looking anything up, check your cuts: the sequence must become five groups of exactly five digits.',
+        'For each group, find the matching five-digit entry in the word list and write its French word; keep the group order.'
+      ],
+      fr: [
+        'Avant de chercher, vérifiez les coupures : la séquence doit donner cinq groupes de exactement cinq chiffres.',
+        'Pour chaque groupe, trouvez l’entrée identique dans la table et notez son mot français ; gardez l’ordre des groupes.'
+      ]
+    },
+    walkthrough: {
+      title: { zh: '跟我做一遍', en: 'Walk through it with me', fr: 'Faisons-le ensemble' },
+      lead: {
+        zh: '用一张只有两个词的迷你编码表演示，切分和查表的方法完全一样。',
+        en: 'A tiny made-up word list shows the same method with just two entries.',
+        fr: 'Une mini-table inventée de deux entrées montre la même méthode.'
+      },
+      steps: {
+        zh: [
+          { t: '先按 5 位切', b: '把示例密文 1000110002 每 5 位切开，得到 10001 和 10002。' },
+          { t: '逐组查表', b: '迷你表里 10001=校、10002=园，把汉字抄在对应数字旁边。' },
+          { t: '按顺序连读', b: '按密文顺序连起来是「校园」，这就是示例口令，不加空格。' }
+        ],
+        en: [
+          { t: 'Cut every five', b: 'Take the sample sequence 1111122222 and cut it into 11111 and 22222.' },
+          { t: 'Look each up', b: 'In the mini list, 11111 = CHAT and 22222 = LUNE; note both words.' },
+          { t: 'Read in order', b: 'Join them in sequence order: CHAT LUNE. That is the sample password.' }
+        ],
+        fr: [
+          { t: 'Couper par cinq', b: 'Prenez la séquence d’exemple 1111122222 et coupez-la en 11111 puis 22222.' },
+          { t: 'Chercher', b: 'Dans la mini-table, 11111 = CHAT et 22222 = LUNE ; notez les deux mots.' },
+          { t: 'Lire dans l’ordre', b: 'Joignez-les dans l’ordre : CHAT LUNE. C’est le mot de passe d’exemple.' }
+        ]
+      },
+      closing: {
+        zh: '现在回到题面，用真正的《口令编码表》解一次。',
+        en: 'Now go back to the exercise and look up the real five words yourself.',
+        fr: 'Revenez maintenant à l’exercice et cherchez vous-même les cinq vrais mots.'
+      }
+    },
     title: {
       zh: '口令生成协议',
       en: 'Password generation protocol',

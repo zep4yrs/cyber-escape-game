@@ -26,6 +26,8 @@
   var AUTO_NEXT_DELAY = 1500;
   var AUTO_REVEAL_DELAY = 3200;
   var LIVE_SYNC_MS = 5000;
+  /* 大一上手层：前两次答错不扣分，从第 3 次起每次 −10 */
+  var FREE_ATTEMPTS = 2;
 
   var scenarioKey = document.documentElement.getAttribute('data-scenario') || 'main';
   var scenario = null;
@@ -54,7 +56,13 @@
     pendingSnapshot: null,
     modalEl: null,
     modalOnClose: null,
-    modalLastFocus: null
+    modalLastFocus: null,
+    /* 上手层：方向提示与知识卡/示范面板状态 */
+    nudge: -1,
+    learnOpen: {},
+    learnAuto: {},
+    walkOpen: {},
+    toolsBuilt: false
   };
 
   /* ------------------------------------------------------------------ *
@@ -317,7 +325,11 @@
       'indexList',
       'enigmaCard', 'enigmaCode', 'enigmaTag', 'enigmaCount', 'enigmaState', 'enigmaTitle',
       'enigmaBrief', 'enigmaContent', 'answerArea', 'answerForm', 'answerInput', 'submitBtn',
-      'answerNote', 'attemptsLabel', 'hintBtn', 'hintsCount', 'hints', 'feedback',
+      'answerNote', 'attemptsLabel', 'hintBtn', 'hintsCount', 'hints', 'feedback', 'nudge', 'nudgeText',
+      'learnCard', 'learnToggle', 'learnBody', 'learnTitle', 'learnGoal', 'learnPoints', 'learnSteps',
+      'walkCard', 'walkToggle', 'walkBody', 'walkTitle', 'walkLead', 'walkSteps', 'walkClosing',
+      'toolbox', 'rot13Input', 'rot13Out', 'letterTable', 'asciiInput', 'asciiResult', 'asciiTable',
+      'onboard', 'onboardDismiss',
       'solvedPanel', 'solvedStamp', 'solvedAnswer', 'solvedBody', 'autoNote', 'prevBtn', 'nextBtn',
       'finishTitle', 'finishStamp', 'statSolved', 'statScore', 'statTime', 'statStatus',
       'reportId', 'reportBody', 'solutionsBtn', 'againBtn',
@@ -874,6 +886,9 @@
 
     renderSolved();
     renderFeedback();
+    renderLearn();
+    renderWalk();
+    renderNudge();
     setText(dom.autoNote, state.autoTimer ? I18N.t('game.enigma.advancing') : '');
 
     dom.prevBtn.disabled = index <= 0;
@@ -886,6 +901,202 @@
         /* ignore */
       }
     }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 渲染：上手层（知识卡 / 跟我做一遍 / 方向提示 / 学习工具）
+   * ------------------------------------------------------------------ */
+  function fillList(list, items) {
+    if (!list) return;
+    clear(list);
+    toArray(items || []).forEach(function (text) {
+      var li = document.createElement('li');
+      li.textContent = text == null ? '' : String(text);
+      list.appendChild(li);
+    });
+  }
+
+  function panelKey() {
+    var enigma = currentEnigma();
+    return enigma && enigma.key ? enigma.key : 'enigma-' + state.current;
+  }
+
+  function setLearnOpen(open) {
+    if (!dom.learnCard) return;
+    var key = panelKey();
+    state.learnOpen[key] = !!open;
+    if (dom.learnBody) dom.learnBody.hidden = !open;
+    if (dom.learnToggle) dom.learnToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  function renderLearn() {
+    if (!dom.learnCard) return;
+    var enigma = currentEnigma();
+    var learn = enigma && enigma.learn;
+    if (!learn) {
+      show(dom.learnCard, false);
+      return;
+    }
+    show(dom.learnCard, true);
+    setText(dom.learnTitle, I18N.pick(learn.title) || '');
+    setText(dom.learnGoal, I18N.pick(learn.goal) || '');
+    fillList(dom.learnPoints, I18N.pickRaw(learn.points));
+    fillList(dom.learnSteps, I18N.pickRaw(learn.steps));
+
+    var key = panelKey();
+    var open = state.learnOpen[key];
+    if (open == null) {
+      /* 每个模式的第一关，进入对局后只自动展开一次（跨会话记住），之后由玩家自己决定 */
+      var autoKey = scenarioKey + ':' + key;
+      var seen = readRaw(NS + 'learnSeen:' + autoKey, '') === '1';
+      var inGame = state.phase === 'playing' || state.phase === 'paused';
+      open = inGame && state.current === 0 && !state.learnAuto[autoKey] && !seen;
+      if (open) writeRaw(NS + 'learnSeen:' + autoKey, '1');
+      if (inGame) state.learnAuto[autoKey] = true;
+      state.learnOpen[key] = open;
+    }
+    setLearnOpen(open);
+  }
+
+  function setWalkOpen(open) {
+    if (!dom.walkCard) return;
+    state.walkOpen[panelKey()] = !!open;
+    if (dom.walkBody) dom.walkBody.hidden = !open;
+    if (dom.walkToggle) dom.walkToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  function renderWalk() {
+    if (!dom.walkCard) return;
+    var enigma = currentEnigma();
+    var walk = enigma && enigma.walkthrough;
+    if (!walk) {
+      show(dom.walkCard, false);
+      return;
+    }
+    show(dom.walkCard, true);
+    setText(dom.walkTitle, I18N.pick(walk.title) || '');
+    setText(dom.walkLead, I18N.pick(walk.lead) || '');
+    setText(dom.walkClosing, I18N.pick(walk.closing) || '');
+    if (dom.walkSteps) {
+      clear(dom.walkSteps);
+      toArray(I18N.pickRaw(walk.steps) || []).forEach(function (step) {
+        var li = document.createElement('li');
+        var title = document.createElement('strong');
+        title.textContent = step && step.t ? String(step.t) : '';
+        var content = document.createElement('span');
+        content.className = 'g-walk__step-body';
+        content.appendChild(title);
+        content.appendChild(document.createTextNode(step && step.b ? String(step.b) : ''));
+        li.appendChild(content);
+        dom.walkSteps.appendChild(li);
+      });
+    }
+    setWalkOpen(!!state.walkOpen[panelKey()]);
+  }
+
+  function renderNudge() {
+    if (!dom.nudge) return;
+    var enigma = currentEnigma();
+    var list = enigma ? I18N.pickRaw(enigma.nudges) : null;
+    var index = Number(state.nudge);
+    var text = '';
+    if (Array.isArray(list) && index >= 0 && index < list.length) text = String(list[index] || '');
+    show(dom.nudge, !!text);
+    setText(dom.nudgeText, text);
+  }
+
+  /* ---------- 学习工具：ROT-13 / 字母序号 / ASCII ---------- */
+
+  function rot13(text) {
+    return String(text == null ? '' : text).replace(/[A-Za-z]/g, function (ch) {
+      var base = ch <= 'Z' ? 65 : 97;
+      return String.fromCharCode(((ch.charCodeAt(0) - base + 13) % 26) + base);
+    });
+  }
+
+  function updateRot13() {
+    if (!dom.rot13Out) return;
+    var raw = dom.rot13Input ? dom.rot13Input.value : '';
+    setText(dom.rot13Out, raw ? rot13(raw) : '');
+  }
+
+  function asciiLookup(raw) {
+    var value = String(raw == null ? '' : raw).trim();
+    if (!value) return null;
+    if (/^\d+$/.test(value)) {
+      if (value.length > 3) return { invalid: true };
+      var code = Number(value);
+      if (code < 32 || code > 126) return { invalid: true };
+      return { kind: 'code', code: code, char: String.fromCharCode(code) };
+    }
+    var chars = Array.from ? Array.from(value) : value.split('');
+    if (chars.length > 1) return { invalid: true };
+    var ch = chars[0];
+    if (!ch) return null;
+    var point = ch.codePointAt(0);
+    if (point >= 32 && point <= 126) return { kind: 'char', char: ch, code: point };
+    return { kind: 'char', char: ch, code: point, wide: true };
+  }
+
+  function updateAscii() {
+    if (!dom.asciiResult) return;
+    var found = asciiLookup(dom.asciiInput ? dom.asciiInput.value : '');
+    if (!found) {
+      setText(dom.asciiResult, '');
+      return;
+    }
+    if (found.invalid) {
+      setText(dom.asciiResult, I18N.t('game.tools.ascii.invalid'));
+      return;
+    }
+    if (found.kind === 'code') {
+      setText(dom.asciiResult, I18N.t('game.tools.ascii.codeChar', { code: found.code, char: found.char }));
+      return;
+    }
+    setText(
+      dom.asciiResult,
+      I18N.t(found.wide ? 'game.tools.ascii.charCodeUnicode' : 'game.tools.ascii.charCode', {
+        char: found.char,
+        code: found.code
+      })
+    );
+  }
+
+  function buildLetterTable() {
+    if (!dom.letterTable) return;
+    clear(dom.letterTable);
+    for (var i = 0; i < 26; i++) {
+      var cell = document.createElement('span');
+      cell.setAttribute('role', 'listitem');
+      var letter = document.createElement('b');
+      letter.textContent = String.fromCharCode(65 + i);
+      cell.appendChild(letter);
+      cell.appendChild(document.createTextNode(String(i + 1)));
+      dom.letterTable.appendChild(cell);
+    }
+  }
+
+  function buildAsciiTable() {
+    if (!dom.asciiTable) return;
+    clear(dom.asciiTable);
+    for (var code = 32; code <= 126; code++) {
+      var cell = document.createElement('span');
+      cell.setAttribute('role', 'listitem');
+      var ch = document.createElement('b');
+      ch.textContent = code === 32 ? 'SP' : String.fromCharCode(code);
+      cell.appendChild(ch);
+      cell.appendChild(document.createTextNode(String(code)));
+      dom.asciiTable.appendChild(cell);
+    }
+  }
+
+  function initToolbox() {
+    if (state.toolsBuilt) return;
+    state.toolsBuilt = true;
+    buildLetterTable();
+    buildAsciiTable();
+    if (dom.rot13Input) dom.rot13Input.addEventListener('input', updateRot13);
+    if (dom.asciiInput) dom.asciiInput.addEventListener('input', updateAscii);
   }
 
   /* ------------------------------------------------------------------ *
@@ -1138,6 +1349,7 @@
     state.pendingAdvance = false;
     state.current = index;
     state.feedback = null;
+    state.nudge = -1;
     setText(dom.autoNote, '');
     renderEnigma({ focus: !!focus });
     renderHud();
@@ -1169,6 +1381,10 @@
     state.per = enigmas.map(freshPerEntry);
     state.score = 0;
     state.feedback = null;
+    state.nudge = -1;
+    state.learnOpen = {};
+    state.learnAuto = {};
+    state.walkOpen = {};
     state.elapsedBefore = 0;
     state.startedAt = Date.now();
     state.pendingAdvance = false;
@@ -1186,10 +1402,11 @@
   }
 
   function computeScore(per) {
+    var penalizedAttempts = Math.max(0, (Number(per.attempts) || 0) - FREE_ATTEMPTS);
     var points =
       BASE_SCORE +
       remainingSeconds() * SECONDS_BONUS -
-      (Number(per.attempts) || 0) * ATTEMPT_PENALTY -
+      penalizedAttempts * ATTEMPT_PENALTY -
       (Number(per.hints) || 0) * HINT_PENALTY;
     return Math.max(0, Math.round(points));
   }
@@ -1210,6 +1427,7 @@
       per.resolved = true;
       per.score = computeScore(per);
       state.score += per.score;
+      state.nudge = -1;
       state.feedback = { tone: 'ok', key: 'game.feedback.correct', vars: { points: per.score } };
       renderEnigma();
       renderHud();
@@ -1226,6 +1444,7 @@
       per.resolved = true;
       per.revealed = true;
       per.score = 0;
+      state.nudge = -1;
       state.feedback = {
         tone: 'bad',
         key: 'game.feedback.revealed',
@@ -1240,14 +1459,19 @@
       return;
     }
 
+    var nudgeList = I18N.pickRaw(enigma.nudges);
+    state.nudge = Array.isArray(nudgeList) && nudgeList.length
+      ? Math.min(per.attempts - 1, nudgeList.length - 1)
+      : -1;
     state.feedback = {
       tone: 'bad',
-      key: 'game.feedback.wrong',
+      key: per.attempts <= FREE_ATTEMPTS ? 'game.feedback.wrongFree' : 'game.feedback.wrong',
       vars: { left: MAX_ATTEMPTS - per.attempts }
     };
     dom.answerInput.setAttribute('data-state', 'bad');
     setText(dom.attemptsLabel, I18N.t('game.enigma.attempts', { n: per.attempts, max: MAX_ATTEMPTS }));
     renderFeedback();
+    renderNudge();
     dom.answerInput.focus();
     try {
       dom.answerInput.select();
@@ -1342,6 +1566,10 @@
     state.resultStatus = '';
     state.pausedByAdmin = false;
     state.feedback = null;
+    state.nudge = -1;
+    state.learnOpen = {};
+    state.learnAuto = {};
+    state.walkOpen = {};
     closeAllModals();
     hideTeamError();
   }
@@ -1398,6 +1626,10 @@
       return per;
     });
     state.feedback = null;
+    state.nudge = -1;
+    state.learnOpen = {};
+    state.learnAuto = {};
+    state.walkOpen = {};
     state.elapsedBefore = Math.max(0, Math.min(TOTAL_TIME - 1, Number(snap.elapsed) || 0));
     state.phase = 'playing';
     state.resultStatus = '';
@@ -1475,6 +1707,7 @@
     renderEnigma();
     renderFinish();
     renderResumeMeta();
+    updateAscii();
     if (state.phase === 'paused' && dom.modalPause && !dom.modalPause.hidden) renderPauseMeta();
     if (dom.timeoutMeta) renderTimeoutMeta();
     if (dom.modalSolutions && !dom.modalSolutions.hidden) renderSolutions();
@@ -1520,6 +1753,22 @@
       });
     }
     if (dom.hintBtn) dom.hintBtn.addEventListener('click', useHint);
+    if (dom.learnToggle) {
+      dom.learnToggle.addEventListener('click', function () {
+        setLearnOpen(!state.learnOpen[panelKey()]);
+      });
+    }
+    if (dom.onboardDismiss) {
+      dom.onboardDismiss.addEventListener('click', function () {
+        show(dom.onboard, false);
+        writeRaw(NS + 'onboardDismissed', '1');
+      });
+    }
+    if (dom.walkToggle) {
+      dom.walkToggle.addEventListener('click', function () {
+        setWalkOpen(!state.walkOpen[panelKey()]);
+      });
+    }
     if (dom.prevBtn) {
       dom.prevBtn.addEventListener('click', function () {
         goTo(state.current - 1, true);
@@ -1590,7 +1839,9 @@
     scenario = resolveScenario();
     resolveEnigmas();
     bindEvents();
+    if (dom.onboard && readRaw(NS + 'onboardDismissed', '') === '1') show(dom.onboard, false);
     setupBroadcast();
+    initToolbox();
 
     if (!I18N.mounted) {
       try {

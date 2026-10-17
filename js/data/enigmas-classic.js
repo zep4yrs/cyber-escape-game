@@ -75,6 +75,93 @@ Object.assign(window.ENIGMAS, {
       zh: '把字母替换成它在字母表中的序号，是最简单的替换密码之一：只要知道 A=1、B=2 的对应关系，就能手工还原。可迁移的安全实践是——口令应使用长且随机的字符串，不要把单词和年份这类可预测信息拼在末尾，因为攻击者会优先尝试这种组合。',
       en: 'Replacing letters with their position in the alphabet is one of the simplest substitution ciphers: knowing that A=1 and B=2 is enough to decode it by hand. The takeaway: passwords should be long and random — never append predictable pieces such as a word and a year, because attackers try those combinations first.',
       fr: "Remplacer chaque lettre par son rang dans l'alphabet est le plus simple des chiffres de substitution : savoir que A=1 et B=2 suffit à décoder à la main. À retenir : un mot de passe doit être long et aléatoire — ne collez jamais un mot et une année à la fin, car les attaquants testent ces combinaisons en premier."
+    },
+
+    learn: {
+      title: { zh: '字母表编号法', en: 'Alphabet numbering', fr: 'Numérotation alphabétique' },
+      goal: {
+        zh: '读完这张卡，你能把一串数字按字母表换成字母，再在末尾接上题面给的年份。',
+        en: "After this card you can turn a number sequence into letters, then append the year given in the puzzle.",
+        fr: "Après cette fiche, tu peux transformer une suite de nombres en lettres puis ajouter l'année donnée dans l'énigme."
+      },
+      points: {
+        zh: [
+          'A=1、B=2……Z=26，数字就是字母在字母表里的位置。',
+          '年份不用换字母，按数字原样接在单词后面。',
+          '可迁移：真实口令别用「单词 + 年份」这类可猜组合。'
+        ],
+        en: [
+          "A=1, B=2 … Z=26: each number is a letter's position in the alphabet.",
+          'The year is not converted — append it as digits after the word.',
+          'Transfer: never build real passwords from a word plus a year.'
+        ],
+        fr: [
+          "A=1, B=2 … Z=26 : chaque nombre est la position d'une lettre dans l'alphabet.",
+          "L'année ne se convertit pas : on la colle en chiffres après le mot.",
+          "À retenir : un vrai mot de passe n'est jamais « mot + année »."
+        ]
+      },
+      steps: {
+        zh: [
+          '把密文数字抄在纸上，按短横线一位一位分开。',
+          '逐个把数字换成字母表里同一位置的字母。',
+          '把换出的字母连起来，再接上题面给的年份并写成大写。'
+        ],
+        en: [
+          'Copy the number sequence onto paper and split it at each dash.',
+          'Replace each number with the letter in that alphabet position.',
+          'Join the letters, append the year from the puzzle, and write it in uppercase.'
+        ],
+        fr: [
+          'Recopie la suite de nombres sur papier et sépare-la à chaque tiret.',
+          "Remplace chaque nombre par la lettre située à cette position dans l'alphabet.",
+          "Assemble les lettres, ajoute l'année de l'énigme puis écris le tout en majuscules."
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '先别拼口令：把每个数字当成字母的「座位号」，回字母表里找对应字母。',
+        '从最小的数字开始逐位写字母；拼完后，把题面给的年份原样接在末尾。'
+      ],
+      en: [
+        "Don't guess the word yet: treat each number as a letter's seat number and find that letter in the alphabet.",
+        "Start from the smallest number and write one letter at a time; then append the puzzle's year unchanged."
+      ],
+      fr: [
+        "Ne devine pas encore le mot : chaque nombre est le numéro de place d'une lettre dans l'alphabet.",
+        "Commence par le plus petit nombre et écris les lettres une à une ; ajoute ensuite l'année telle quelle."
+      ]
+    },
+    walkthrough: {
+      title: { zh: '跟我做一遍', en: 'Walk through it with me', fr: 'Faisons-le ensemble' },
+      lead: {
+        zh: '用一个类似的小例子，演示数字怎么变成字母。',
+        en: 'A similar mini example shows how numbers become letters.',
+        fr: 'Un petit exemple similaire montre comment les nombres deviennent des lettres.'
+      },
+      steps: {
+        zh: [
+          { t: '先抄下来', b: '把类似的一串数字 2-1-3-11 抄到纸上，按短横线分成 4 位。' },
+          { t: '逐位查表', b: '按 A=1 的规则：2 是 B、1 是 A、3 是 C、11 是 K，拼起来就是 BACK。' },
+          { t: '拼回题面', b: '用同样方法处理题里的数字，末尾接上题面给的年份，检查大小写和空格。' }
+        ],
+        en: [
+          { t: 'Copy it down', b: 'Write a similar sequence, 2-1-3-11, on paper and split it into 4 positions.' },
+          { t: 'Look each up', b: 'With A=1: 2→B, 1→A, 3→C, 11→K — the four letters spell BACK.' },
+          { t: 'Back to puzzle', b: 'Do the same with the puzzle numbers, append the year it gives, then check capitals and spaces.' }
+        ],
+        fr: [
+          { t: "Copie d'abord", b: 'Écris une suite similaire, 2-1-3-11, sur papier et découpe-la en 4 positions.' },
+          { t: 'Cherche les rangs', b: 'Avec A=1 : 2→B, 1→A, 3→C, 11→K ; les quatre lettres donnent BACK.' },
+          { t: "Reviens à l'énigme", b: "Applique la même méthode aux nombres de l'énigme, ajoute l'année indiquée puis vérifie majuscules et espaces." }
+        ]
+      },
+      closing: {
+        zh: '现在用同样的顺序自己走一遍。',
+        en: 'Now run through the real one in the same order.',
+        fr: 'À toi de refaire le vrai parcours dans le même ordre.'
+      }
     }
   },
 
@@ -181,6 +268,63 @@ Object.assign(window.ENIGMAS, {
       zh: '钓鱼邮件最常用的伪装是「形近域名」：把字母换成外形相似的字符（如 googIe 中的大写 I）、多加一个字母（creditt），或改用 .tk、.ml 这类廉价域名冒充知名品牌。可迁移的做法是——不点邮件里的链接，逐字核对发件域名，并通过官方 App 或手动输入网址处理账户问题。',
       en: 'Phishing emails usually rely on look-alike domains: swapping a letter for a similar glyph (the capital I in googIe), adding one letter (creditt), or using cheap domains such as .tk and .ml to impersonate well-known brands. The transferable habit: never click links in the email — check every letter of the sender domain and reach the service through its official app or by typing the address yourself.',
       fr: "Les emails de phishing reposent souvent sur des domaines ressemblants : une lettre remplacée par un caractère similaire (le I majuscule de googIe), une lettre ajoutée (creditt), ou un domaine bon marché en .tk / .ml qui usurpe une marque connue. Le réflexe à garder : ne cliquez jamais sur les liens de l'email, vérifiez chaque lettre du domaine de l'expéditeur et passez par l'application officielle ou l'adresse saisie à la main."
+    },
+
+    learn: {
+      title: { zh: '看域名抓钓鱼', en: 'Read the domain', fr: 'Lire le domaine' },
+      goal: {
+        zh: '读完这张卡，你能从发件人域名里找出仿冒痕迹，并按编号报出可疑邮件。',
+        en: "After this card you can spot look-alike sender domains and report suspicious emails by number.",
+        fr: "Après cette fiche, tu sais repérer un domaine d'expéditeur imité et signaler les emails suspects par leur numéro."
+      },
+      points: {
+        zh: [
+          '钓鱼邮件常改一两个字母或换形近字符，冒充熟悉的品牌域名。',
+          '免费或廉价后缀（.tk、.ml）常被用来伪装官方通知。',
+          '可迁移：先核对发件域名，拿不准就自己输入官方网址。'
+        ],
+        en: [
+          'Phishing often changes a letter or two, or uses look-alike characters, to fake a brand domain.',
+          'Free or cheap suffixes such as .tk and .ml are often used to imitate official notices.',
+          'Transfer: check the sender domain first; if unsure, type the official address yourself.'
+        ],
+        fr: [
+          "Le phishing change souvent une ou deux lettres, ou des caractères ressemblants, pour imiter une marque.",
+          'Les suffixes gratuits ou bon marché comme .tk et .ml servent à imiter des avis officiels.',
+          "À retenir : vérifie d'abord le domaine de l'expéditeur ; en cas de doute, saisis l'adresse officielle toi-même."
+        ]
+      },
+      steps: {
+        zh: [
+          '把 6 个发件人域名逐字读一遍，圈出拼写和常见品牌不一致的地方。',
+          '检查每个域名的结尾，把陌生或廉价后缀的邮件编号记下来。',
+          '按编号从小到大写出可疑邮件，用半角逗号连接。'
+        ],
+        en: [
+          'Read all 6 sender domains letter by letter and circle spellings that differ from the real brand.',
+          'Check each domain ending and note the email numbers whose suffix looks unfamiliar or cheap.',
+          'List the suspicious email numbers in ascending order, separated by commas.'
+        ],
+        fr: [
+          "Lis les 6 domaines d'expéditeur lettre par lettre et entoure ceux qui s'écartent de la marque.",
+          'Regarde la fin de chaque domaine et note les numéros des emails au suffixe inconnu ou bon marché.',
+          'Écris les numéros suspects par ordre croissant, séparés par des virgules.'
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '别只读主题和翻译——把视线移到 @ 后面的域名，一个字母一个字母地看。',
+        '找三类痕迹：多一个字母、少一个字母、形近字符；再核对后缀是否常见。'
+      ],
+      en: [
+        "Don't stop at the subject line — look at the part after the @ and read it letter by letter.",
+        'Look for three traces: an extra letter, a missing letter, a look-alike character; then check the suffix.'
+      ],
+      fr: [
+        "Ne t'arrête pas à l'objet : regarde la partie après le @ et lis-la lettre par lettre.",
+        'Cherche trois traces : une lettre en trop, une lettre manquante, un caractère ressemblant ; vérifie ensuite le suffixe.'
+      ]
     }
   },
 
@@ -298,6 +442,63 @@ YP</pre>
       zh: '二维码本质上是把文本编码成黑白模块，再按行列顺序排列；只要按正确的读取顺序把碎片里的字符依次拼接，就能还原出原始内容。安全上要注意：二维码本身无法辨别真伪，扫来源不明的二维码可能直接打开钓鱼网站，所以只扫描可信来源的码，并在打开后先核对网址。',
       en: 'A QR code simply encodes text as black and white modules arranged in rows and columns; concatenate the characters in the right reading order and the original content comes back. Security note: a QR code cannot be authenticated by eye — scanning an unknown code may open a phishing site, so only scan codes from trusted sources and check the URL before interacting.',
       fr: "Un QR code n'est rien d'autre qu'un texte encodé en modules noirs et blancs rangés en lignes et en colonnes : concaténez les caractères dans le bon ordre de lecture et le contenu d'origine réapparaît. Côté sécurité : un QR code ne se vérifie pas à l'œil — scanner un code inconnu peut ouvrir un site de phishing, donc ne scannez que des codes de confiance et vérifiez l'URL avant d'agir."
+    },
+
+    learn: {
+      title: { zh: '碎片按顺序读', en: 'Reading QR fragments', fr: 'Lire les fragments' },
+      goal: {
+        zh: '读完这张卡，你能把切碎的二维码按读取顺序拼回一长串口令。',
+        en: 'After this card you can reassemble sliced QR fragments in reading order to recover the full code.',
+        fr: "Après cette fiche, tu sais remettre les fragments d'un QR code dans l'ordre de lecture pour reconstituer le code."
+      },
+      points: {
+        zh: [
+          '二维码把数据编码成黑白格子，按「行、列」的固定顺序存放。',
+          '三个大方块是定位图案，只帮扫码定位，不存口令内容。',
+          '可迁移：来源不明的二维码不要扫，先确认它指向哪里。'
+        ],
+        en: [
+          'A QR code stores data as black-and-white cells laid out in a fixed row-and-column order.',
+          'The three big squares are finder patterns: they help scanners locate the code, not store data.',
+          'Transfer: never scan a QR code from an unknown source — check where it points first.'
+        ],
+        fr: [
+          'Un QR code range les données dans des cases noir et blanc, selon un ordre lignes/colonnes.',
+          'Les trois grands carrés servent au repérage : ils localisent le code, pas les données.',
+          "À retenir : ne scanne jamais un QR code d'origine inconnue sans vérifier sa destination."
+        ]
+      },
+      steps: {
+        zh: [
+          '先找出带定位图案的那块碎片，用它确定二维码的上下方向。',
+          '把数据碎片按从左到右、从上到下的顺序逐格抄成一行。',
+          '接上另一块碎片的有用行，数到题面说的位数就停下。'
+        ],
+        en: [
+          "Find the fragment with the finder pattern and use it to fix the code's up-down orientation.",
+          'Copy the data fragment cell by cell, left to right and top to bottom, into one line.',
+          'Join the useful line of the other fragment and stop once you reach the length the puzzle states.'
+        ],
+        fr: [
+          "Repère le fragment qui contient le motif de repérage et sers-t'en pour fixer le sens du code.",
+          'Recopie le fragment de données case par case, de gauche à droite puis de haut en bas.',
+          "Ajoute la ligne utile de l'autre fragment et arrête-toi à la longueur indiquée dans l'énigme."
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '先分清楚哪块是定位图案、哪块装数据，别急着拼单词。',
+        '按「从左到右、从上到下」一格一格读，跳过填充用的符号。'
+      ],
+      en: [
+        "Separate the finder pattern from the data first — don't rush to guess a word.",
+        'Read left to right, then top to bottom, one cell at a time, and skip the filler symbols.'
+      ],
+      fr: [
+        "Sépare d'abord le motif de repérage des données : ne devine pas un mot trop vite.",
+        'Lis de gauche à droite puis de haut en bas, case par case, et ignore les symboles de remplissage.'
+      ]
     }
   },
 
@@ -404,6 +605,63 @@ YP</pre>
       zh: '开放网络没有任何加密，攻击者可以在同一热点上抓包、伪造热点做中间人攻击；WEP 加密已被证明可在几分钟内破解，出厂默认的 SSID 和口令也早被公开。可迁移的安全习惯：优先连接 WPA2/WPA3-Enterprise 网络，关闭设备的「自动连接开放 Wi-Fi」，处理敏感事务时改用手机热点。',
       en: 'An open network has no encryption, so an attacker on the same hotspot can sniff traffic or run a rogue hotspot for a man-in-the-middle attack; WEP encryption has long been broken in minutes, and factory-default SSIDs and passwords are public knowledge. Good habits: prefer WPA2/WPA3-Enterprise networks, turn off automatic connection to open Wi-Fi, and use your phone hotspot for sensitive tasks.',
       fr: "Un réseau ouvert n'est pas chiffré : un attaquant sur le même point d'accès peut capturer le trafic ou monter un faux hotspot pour une attaque de l'intermédiaire ; le WEP est cassable en quelques minutes et les SSID/mots de passe d'usine sont publics. Les bons réflexes : privilégier un réseau WPA2/WPA3-Enterprise, désactiver la connexion automatique aux Wi-Fi ouverts et utiliser le partage de connexion du téléphone pour les opérations sensibles."
+    },
+
+    learn: {
+      title: { zh: '识别危险热点', en: 'Spot risky hotspots', fr: 'Repérer les hotspots' },
+      goal: {
+        zh: '读完这张卡，你能按加密方式给 Wi-Fi 分类，挑出该避开的热点。',
+        en: 'After this card you can sort Wi-Fi networks by their security setup and pick the ones to avoid.',
+        fr: 'Après cette fiche, tu sais classer des réseaux Wi-Fi selon leur sécurité et repérer ceux à éviter.'
+      },
+      points: {
+        zh: [
+          '开放网络不加密，同一热点下的人可以直接看到你的流量。',
+          'WEP 早已被淘汰，几分钟就能被破解，不能当成安全措施。',
+          '可迁移：优先连 WPA2/WPA3-Enterprise，关掉自动连接开放 Wi-Fi。'
+        ],
+        en: [
+          'An open network has no encryption, so people on the same hotspot can see your traffic.',
+          'WEP is obsolete and can be cracked in minutes — it is not a real protection.',
+          'Transfer: prefer WPA2/WPA3-Enterprise and turn off auto-connect to open Wi-Fi.'
+        ],
+        fr: [
+          "Un réseau ouvert n'a aucun chiffrement : les autres utilisateurs du hotspot voient ton trafic.",
+          "Le WEP est obsolète et cassable en quelques minutes : ce n'est pas une vraie protection.",
+          'À retenir : privilégie WPA2/WPA3-Enterprise et désactive la connexion automatique aux Wi-Fi ouverts.'
+        ]
+      },
+      steps: {
+        zh: [
+          '逐行读「安全配置」一列，给每个网络标上「安全」「存疑」或「危险」。',
+          '把标成开放和 WEP 的行圈出来，再确认它是不是出厂默认配置。',
+          '按编号从小到大写出要避开的网络，用半角逗号连接。'
+        ],
+        en: [
+          'Read the security column row by row and label each network safe, doubtful or dangerous.',
+          'Circle the rows marked open or WEP, then check whether they still use a factory default setup.',
+          'List the network numbers to avoid in ascending order, separated by commas.'
+        ],
+        fr: [
+          'Lis la colonne sécurité ligne par ligne et classe chaque réseau : sûr, douteux ou dangereux.',
+          'Entoure les lignes « ouvert » ou « WEP », puis vérifie s\'il s\'agit d\'une configuration d\'usine.',
+          'Écris les numéros des réseaux à éviter par ordre croissant, séparés par des virgules.'
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '先只看加密方式这一列，别被网络名字里的「免费」「快速」带跑。',
+        '开放＝不用密码就能连；WEP＝老旧加密；默认名称和默认配置也是线索。'
+      ],
+      en: [
+        "Read only the security column first — don't be swayed by names like “free” or “fast”.",
+        'Open means no password needed; WEP is an old cipher; default names and factory defaults are clues too.'
+      ],
+      fr: [
+        "Regarde d'abord uniquement la colonne sécurité, sans te laisser influencer par le nom du réseau.",
+        "Ouvert = pas de mot de passe ; WEP = vieux chiffrement ; noms et réglages d'usine sont aussi des indices."
+      ]
     }
   },
 
@@ -482,6 +740,63 @@ YP</pre>
       zh: '出生地、宠物名、入职年份这类信息很容易从社交媒体和公开资料里收集齐，用它们拼口令正是社会工程学的典型切入点。安全实践：口令应由密码管理器生成和保管的随机字符串承担，重要备份与账户一律开启双因素认证。',
       en: 'Details such as a birthplace, a pet\'s name and a hire year are easy to collect from social media and public records — combining them into a password is a classic social-engineering entry point. Security practice: let a password manager generate and store random passwords, and enable two-factor authentication on important backups and accounts.',
       fr: "Le lieu de naissance, le nom de l'animal, l'année d'embauche : ces informations se collectent facilement sur les réseaux sociaux et dans les documents publics, et les assembler en mot de passe est une entrée classique d'ingénierie sociale. Bonne pratique : laisser un gestionnaire de mots de passe générer et conserver des chaînes aléatoires, et activer la double authentification sur les sauvegardes et comptes sensibles."
+    },
+
+    learn: {
+      title: { zh: '信息拼接口令', en: 'Profile-based passwords', fr: 'Mots de passe personnels' },
+      goal: {
+        zh: '读完这张卡，你能从档案里挑出三类信息，按题面顺序拼成一个口令。',
+        en: 'After this card you can pick three details from a profile and join them into a password in the order the puzzle gives.',
+        fr: "Après cette fiche, tu sais choisir trois informations d'un profil et les assembler dans l'ordre indiqué par l'énigme."
+      },
+      points: {
+        zh: [
+          '社会工程学靠公开信息猜口令，城市、宠物、年份最常被收集。',
+          '拼接顺序看题面的方括号，大小写按「每段首字母大写」处理。',
+          '可迁移：口令交给密码管理器随机生成，重要账户开双因素认证。'
+        ],
+        en: [
+          'Social engineering guesses passwords from public details: city, pet and year are favourites.',
+          'The order comes from the brackets in the puzzle; capitalise the first letter of each part.',
+          'Transfer: let a password manager generate random passwords and enable two-factor authentication.'
+        ],
+        fr: [
+          'L\'ingénierie sociale devine les mots de passe à partir d\'infos publiques : ville, animal, année.',
+          'L\'ordre vient des crochets de l\'énigme ; chaque partie prend une majuscule au début.',
+          'À retenir : laisse un gestionnaire générer un mot de passe aléatoire et active la double authentification.'
+        ]
+      },
+      steps: {
+        zh: [
+          '在档案里圈出三类信息：出生城市、宠物名、入职年份。',
+          '按题面方括号的顺序把三段写成一行，段与段之间不加空格。',
+          '逐段检查大小写：首字母大写、其余小写，数字照抄。'
+        ],
+        en: [
+          'Circle three details in the profile: birth city, pet name and hire year.',
+          "Write the three parts on one line in the order of the puzzle's brackets, with no spaces.",
+          'Check capitalisation part by part: first letter uppercase, the rest lowercase, digits unchanged.'
+        ],
+        fr: [
+          "Entoure trois informations du profil : ville de naissance, nom de l'animal et année d'embauche.",
+          "Écris les trois parties sur une ligne dans l'ordre des crochets de l'énigme, sans espace.",
+          'Vérifie les majuscules partie par partie : première lettre en capitale, le reste en minuscules.'
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '先把三类信息各写一行放在旁边，别急着拼——顺序错了会白搭。',
+        '照题面方括号的顺序摆好三段，再只调整大小写和空格。'
+      ],
+      en: [
+        "Write the three details on separate lines first — don't rush to join them, the wrong order wastes the answer.",
+        'Put the three parts in the bracket order from the puzzle, then adjust only capitals and spaces.'
+      ],
+      fr: [
+        "Écris d'abord les trois informations sur trois lignes : ne les assemble pas trop vite, l'ordre compte.",
+        "Place les trois parties dans l'ordre des crochets de l'énigme, puis ne règle que majuscules et espaces."
+      ]
     }
   },
 
@@ -602,6 +917,63 @@ YP</pre>
       zh: '把前几关的线索按公式汇总、再对照码表查出结果，本质上是一次「数据串联 + 索引映射」：单独的线索价值有限，串起来才能定位最终目标。现实中，能生成「主控代码」的密钥必须离线保管、分级授权并全程审计，避免一个环节失守导致全线失陷。',
       en: 'Collecting clues from earlier levels, summing them with a formula and looking the result up in a table is essentially data chaining plus index mapping: a single clue has little value until the pieces are linked. In real systems, keys that can generate a master code must be stored offline, access-controlled and fully audited, so that one compromised link does not bring down the whole chain.',
       fr: "Rassembler les indices des énigmes précédentes, les additionner selon une formule puis consulter une table, c'est un enchaînement de données doublé d'une correspondance d'index : un indice isolé vaut peu, c'est leur mise en relation qui révèle la cible. En conditions réelles, les clés capables de générer un « code maître » doivent être conservées hors ligne, soumises à des droits hiérarchisés et auditées, pour qu'un seul maillon compromis ne fasse pas tomber toute la chaîne."
+    },
+
+    learn: {
+      title: { zh: '求和再查表', en: 'Sum then look up', fr: 'Additionner puis chercher' },
+      goal: {
+        zh: '读完这张卡，你能把几关的数据逐项加总，再按总数值在码表里找到对应代码。',
+        en: 'After this card you can add up the data from earlier stages and use the total to find a code in the table.',
+        fr: 'Après cette fiche, tu sais additionner les données des étapes précédentes puis retrouver le code correspondant dans la table.'
+      },
+      points: {
+        zh: [
+          '先把前几关的数据逐项列出来，不要跳步直接猜总数。',
+          '「各位数字之和」要把年份拆成四个数字再相加。',
+          '可迁移：查表前先算准索引，错一位就会落到错误的行。'
+        ],
+        en: [
+          "List the data from earlier stages one by one — don't skip ahead and guess the total.",
+          'For a digit sum, split the year into its four digits before adding.',
+          'Transfer: get the index right before looking it up; one off lands on the wrong row.'
+        ],
+        fr: [
+          'Liste les données des étapes précédentes une par une : ne devine pas le total.',
+          "Pour une somme de chiffres, découpe l'année en quatre chiffres avant d'additionner.",
+          'À retenir : vérifie l\'indice avant de chercher ; une erreur et tu tombes sur la mauvaise ligne.'
+        ]
+      },
+      steps: {
+        zh: [
+          '按题面公式逐项抄下 5 个数值，写成一行加法。',
+          '先加前两个数，再把结果逐项加上去，最后复核一遍。',
+          '拿着总数值到码表里找同一行右侧的代码，按原样抄写大小写。'
+        ],
+        en: [
+          "Copy the five values from the puzzle's formula and write them as one addition.",
+          'Add the first two numbers, then add the rest one by one and check the result again.',
+          'Take the total to the code table, find that row and copy the code on its right exactly.'
+        ],
+        fr: [
+          "Recopie les cinq valeurs de la formule de l'énigme et écris-les en une seule addition.",
+          'Additionne d\'abord les deux premiers nombres, puis les autres un par un, et vérifie le résultat.',
+          'Reporte le total dans la table, trouve la bonne ligne et recopie le code de droite à l\'identique.'
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '回题面把五段数据逐项核对，尤其别漏掉「各位数字之和」那一条。',
+        '把加法拆成两步：先算前两项，再逐项累加；算出总数后再去表里定位。'
+      ],
+      en: [
+        "Go back to the puzzle and re-check all five data points, especially the digit-sum line.",
+        'Split the addition in two: add the first two values, then add the rest one by one; only then look up the total.'
+      ],
+      fr: [
+        "Reviens à l'énigme et vérifie les cinq données une par une, surtout la ligne de la somme des chiffres.",
+        'Coupe l\'addition en deux : d\'abord les deux premières valeurs, puis les suivantes ; cherche le total seulement après.'
+      ]
     }
   }
 });

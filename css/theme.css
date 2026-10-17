@@ -20,8 +20,8 @@
   /* 墨色 */
   --ink: #161a3a;
   --ink-80: rgba(22, 26, 58, 0.82);
-  --ink-62: rgba(22, 26, 58, 0.64);
-  --ink-44: rgba(22, 26, 58, 0.46);
+  --ink-62: rgba(22, 26, 58, 0.72);
+  --ink-44: rgba(22, 26, 58, 0.63);
   --ink-28: rgba(22, 26, 58, 0.28);
   --ink-16: rgba(22, 26, 58, 0.15);
 
@@ -41,16 +41,16 @@
   --brand-line: rgba(74, 78, 224, 0.3);
 
   /* 状态 */
-  --ok: #247a53;
-  --warn: #96661a;
-  --hold: #6b7392;
+  --ok: #1f6b48;
+  --warn: #7c5310;
+  --hold: #5c6484;
   --alert: #a8324a;
   --alert-soft: rgba(168, 50, 74, 0.08);
   --alert-line: rgba(168, 50, 74, 0.34);
-  --ok-soft: rgba(36, 122, 83, 0.08);
-  --ok-line: rgba(36, 122, 83, 0.3);
-  --warn-soft: rgba(150, 102, 26, 0.08);
-  --warn-line: rgba(150, 102, 26, 0.3);
+  --ok-soft: rgba(31, 107, 72, 0.09);
+  --ok-line: rgba(31, 107, 72, 0.32);
+  --warn-soft: rgba(124, 83, 16, 0.09);
+  --warn-line: rgba(124, 83, 16, 0.32);
 
   /* 氛围光晕 */
   --haze-blue: rgba(92, 128, 240, 0.2);
@@ -527,13 +527,18 @@ ol {
 }
 
 .langswitch__sep {
-  color: var(--ink-28);
+  color: var(--ink-44);
   font-family: var(--font-mono);
   font-size: var(--t-mono);
 }
 
 .langswitch__btn {
-  padding: 4px 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 5px 4px;
 }
 
 /* ---------- 页脚 ---------- */
@@ -575,7 +580,7 @@ ol {
 .site-foot__meta .mono {
   display: block;
   margin-top: 10px;
-  color: var(--ink-28);
+  color: var(--ink-44);
   font-size: 11px;
 }
 
@@ -890,7 +895,7 @@ button:focus-visible .arw {
 
 .input::placeholder,
 .textarea::placeholder {
-  color: var(--ink-28);
+  color: var(--ink-44);
   letter-spacing: 0.08em;
 }
 

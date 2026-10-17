@@ -13,6 +13,92 @@ Object.assign(window.ENIGMAS, {
     key: 'pwd_intercept',
     code: 'EN-01',
     tag: { zh: '口令重建', en: 'Password', fr: 'Mot de passe' },
+    learn: {
+      title: { zh: '奇数位与拼接', en: 'Odd letters and swaps', fr: 'Lettres impaires et échange' },
+      goal: {
+        zh: '读完这张卡，你会按「编号 → 挑位 → 对调 → 接年份」的顺序，把碎片信息拼成完整口令。',
+        en: 'After this card you can assemble a full password by numbering a word, picking positions, swapping two letters and adding a year.',
+        fr: 'Après cette fiche, vous saurez reconstituer un mot de passe : numéroter, extraire des positions, échanger deux lettres, ajouter une année.'
+      },
+      points: {
+        zh: [
+          '奇偶位：把单词从左到右编号，第 1、3、5… 位就是奇数位。',
+          '短信里的额外动作要照做：提取后若要求对调，只换指定的两位。',
+          '可迁移：固定规则拼口令不可靠，重要账号用随机口令加双因素认证。'
+        ],
+        en: [
+          'Number the word from the left; the 1st, 3rd, 5th… are the odd positions.',
+          'Do the extra SMS step: if a swap is requested, exchange exactly those two extracted letters.',
+          'Practice: rule-built passwords are guessable; use random passwords plus two-factor authentication.'
+        ],
+        fr: [
+          'Positions impaires : numérotez le mot depuis la gauche ; les 1re, 3e, 5e… sont impaires.',
+          'Suivez l’étape du SMS : si un échange est demandé, échangez exactement ces deux lettres extraites.',
+          'À retenir : un mot de passe construit par règle se devine ; préférez un mot aléatoire avec double authentification.'
+        ]
+      },
+      steps: {
+        zh: [
+          '把基准词抄到纸上，从左到右给每个字母标上 1、2、3… 的序号。',
+          '按数字清单挑出所有奇数位字母，保持原顺序抄成一列。',
+          '照短信做完对调，再把年份接在末尾，得到完整口令。'
+        ],
+        en: [
+          'Copy the base word onto paper and number every letter from left to right.',
+          'Pick the odd-position letters and write them in one column, keeping their order.',
+          'Make the swap the SMS asks for, then append the year to finish the password.'
+        ],
+        fr: [
+          'Recopiez le mot de référence sur papier et numérotez chaque lettre de gauche à droite.',
+          'Prenez les lettres de positions impaires et écrivez-les dans une seule colonne, dans l’ordre.',
+          'Faites l’échange demandé par le SMS, puis ajoutez l’année à la fin du mot de passe.'
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '先别管年份：把基准词逐位编号，数清它有多少个字母，再看规则要你取哪几位。',
+        '把奇数位字母按顺序抄成一列，再照短信把点名的两位互换，最后才接后缀。'
+      ],
+      en: [
+        'Ignore the year at first: number the base word, count its letters and find which positions the rule asks for.',
+        'Write the odd-position letters in order, swap the two letters the SMS names, and add the suffix only at the end.'
+      ],
+      fr: [
+        'Oubliez l’année un instant : numérotez le mot, comptez ses lettres et repérez les positions demandées.',
+        'Écrivez les lettres des positions impaires dans l’ordre, échangez les deux lettres nommées par le SMS, puis ajoutez le suffixe.'
+      ]
+    },
+    walkthrough: {
+      title: { zh: '跟我做一遍', en: 'Walk through it with me', fr: 'Faisons-le ensemble' },
+      lead: {
+        zh: '换一个普通单词做演示，完整流程和题面完全一样；方法会了再回题面。',
+        en: 'Let us run the full method on a plain word; once it clicks, go back to the task.',
+        fr: 'Faisons la méthode complète sur un mot ordinaire ; ensuite, retournez à l’exercice.'
+      },
+      steps: {
+        zh: [
+          { t: '抄下示例词', b: '把 PROGRAMMING 抄到纸上，按 1～11 逐位编号，先确认总长度。' },
+          { t: '取出奇数位', b: '从第 1 位开始隔一位取一个，得到 P、O、R、M、I、G，保持原顺序。' },
+          { t: '对调再接年份', b: '把第 4、5 个字母互换，再接一个年份（如 2019），示例口令就拼好了。' }
+        ],
+        en: [
+          { t: 'Copy the word', b: 'Write PROGRAMMING on paper; number its 11 letters 1 to 11.' },
+          { t: 'Take odd ones', b: 'Start at letter 1 and take every other letter: P, O, R, M, I, G.' },
+          { t: 'Swap, add year', b: 'Swap the 4th and 5th letters, then add a year such as 2019.' }
+        ],
+        fr: [
+          { t: 'Recopier le mot', b: 'Écrivez PROGRAMMING sur papier et numérotez ses 11 lettres.' },
+          { t: 'Prendre les impaires', b: 'Partez de la 1re lettre et prenez-en une sur deux : P, O, R, M, I, G.' },
+          { t: 'Échanger, ajouter', b: 'Échangez les 4e et 5e lettres et ajoutez une année (2019).' }
+        ]
+      },
+      closing: {
+        zh: '现在回到题面，用基准词和短信里的规则，自己走一遍。',
+        en: 'Now go back to the base word and the SMS rule, and walk through it yourself.',
+        fr: 'Revenez maintenant au mot de référence et à la règle du SMS, et faites-le vous-même.'
+      }
+    },
     title: {
       zh: '被截获的管理员口令',
       en: 'Intercepted administrator password',
@@ -88,6 +174,62 @@ Object.assign(window.ENIGMAS, {
     key: 'email_forensics',
     code: 'EN-02',
     tag: { zh: '邮件取证', en: 'Email', fr: 'E-mail' },
+    learn: {
+      title: { zh: '看懂邮件认证', en: 'Reading email headers', fr: 'Lire les en-têtes' },
+      goal: {
+        zh: '读完这张卡，你会先核对发件域名，再看 SPF 与 DKIM，判断一封邮件值不值得信任。',
+        en: 'After this card you can check the sender domain, then the SPF and DKIM columns, before trusting any email.',
+        fr: 'Après cette fiche, vous saurez vérifier le domaine expéditeur puis les colonnes SPF et DKIM avant de faire confiance à un e-mail.'
+      },
+      points: {
+        zh: [
+          'SPF 验证发件服务器是否被域名授权，DKIM 用签名证明内容没被改动。',
+          '仿冒域名爱用形近字符或数字替换，还要看顶级域有没有写对。',
+          '可迁移：任何来信都先看完整域名，别只信显示名。'
+        ],
+        en: [
+          'SPF checks the sending server is authorised; DKIM signs the message so it cannot be altered.',
+          'Look-alike domains swap letters for digits or similar characters, and fake top-level domains appear.',
+          'Practice: verify the full sender domain on every message, never trust the display name alone.'
+        ],
+        fr: [
+          'SPF vérifie que le serveur expéditeur est autorisé ; DKIM signe le message pour garantir son intégrité.',
+          'Les domaines imitateurs remplacent des lettres par des chiffres ou des caractères proches.',
+          'À retenir : vérifiez toujours le domaine complet de l’expéditeur, pas seulement son nom affiché.'
+        ]
+      },
+      steps: {
+        zh: [
+          '逐行看发件人，把 @ 后面的完整域名抄到纸上。',
+          '比对域名：找数字替换、相似字母和可疑的顶级域。',
+          '再看 SPF 与 DKIM 两列，记下写出 FAIL 的行。'
+        ],
+        en: [
+          'Go row by row and copy the full domain after the @ sign.',
+          'Compare domains for digit swaps, look-alike letters and odd top-level domains.',
+          'Then read the SPF and DKIM columns and note the rows marked FAIL.'
+        ],
+        fr: [
+          'Ligne par ligne, recopiez le domaine complet après le signe @.',
+          'Comparez : chiffres à la place de lettres, caractères proches, extension douteuse.',
+          'Lisez ensuite les colonnes SPF et DKIM et notez les lignes en FAIL.'
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '先只看「发件人」这一列：把每行 @ 后面的域名抄下来，和它声称的机构名对一对。',
+        '挑出两类行——域名明显不对的，以及认证列写着 FAIL 的；把这两类行号抄下来，同一封只记一次。'
+      ],
+      en: [
+        'Start with the sender column: copy each domain after the @ and compare it with the institution it claims to be.',
+        'Mark two kinds of rows: clearly wrong domains, and rows with FAIL in SPF or DKIM. Note each number once.'
+      ],
+      fr: [
+        'Commencez par la colonne expéditeur : recopiez chaque domaine après le @ et comparez-le à l’organisme annoncé.',
+        'Repérez deux types de lignes : les domaines douteux et celles avec FAIL ; notez chaque numéro une seule fois.'
+      ]
+    },
     title: {
       zh: '邮件头取证分析',
       en: 'Email header forensics',
@@ -196,6 +338,62 @@ Object.assign(window.ENIGMAS, {
     key: 'rot13',
     code: 'EN-03',
     tag: { zh: '古典密码', en: 'Cipher', fr: 'Chiffrement' },
+    learn: {
+      title: { zh: '旋转十三位替换', en: 'ROT-13 letter shifting', fr: 'Décalage ROT-13' },
+      goal: {
+        zh: '读完这张卡，你会把每个字母在字母表上平移 13 位，把密文还原成明文。',
+        en: 'After this card you can shift every letter 13 places and turn the ciphertext back into plaintext.',
+        fr: 'Après cette fiche, vous saurez décaler chaque lettre de 13 places pour retrouver le message clair.'
+      },
+      points: {
+        zh: [
+          'ROT-13 让 A 变成 N、B 变成 O，大小写各自在字母表里平移。',
+          '13 + 13 = 26，所以加密和解密是同一套操作，来回都成立。',
+          '可迁移：固定替换挡不住计算，敏感数据要用现代加密算法。'
+        ],
+        en: [
+          'ROT-13 turns A into N and B into O; uppercase and lowercase shift separately.',
+          'Because 13 + 13 = 26, one single operation both encrypts and decrypts.',
+          'Practice: a fixed substitution cannot stop computers; protect data with modern encryption.'
+        ],
+        fr: [
+          'ROT-13 transforme A en N et B en O, en décalant majuscules et minuscules dans leur alphabet.',
+          'Comme 13 + 13 = 26, une seule opération sert à chiffrer et à déchiffrer.',
+          'À retenir : une substitution fixe ne résiste pas au calcul ; utilisez un chiffrement moderne.'
+        ]
+      },
+      steps: {
+        zh: [
+          '把密文抄下来，一个字母占一格，方便逐格改写。',
+          '每个字母在字母表上向后数 13 位，越过 Z 就从 A 继续数。',
+          '把新字母按原顺序连起来，读一遍检查是否通顺。'
+        ],
+        en: [
+          'Copy the ciphertext with one letter per cell so you can rewrite them one by one.',
+          'Move each letter 13 places forward, wrapping past Z back to A.',
+          'Read the new letters in order and check the plaintext makes sense.'
+        ],
+        fr: [
+          'Recopiez le texte chiffré une lettre par case pour les transformer une à une.',
+          'Avancez chaque lettre de 13 places, en repartant de A après Z.',
+          'Relisez les lettres dans l’ordre et vérifiez que le message est cohérent.'
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '先确认这套操作是对称的：对密文再做一遍同样的平移，会回到原文；那解码时该往哪个方向数？',
+        '逐字母拆开，每个字母在字母表上后移 13 格（越过 Z 从头数），再把结果按原顺序拼回去。'
+      ],
+      en: [
+        'Remember the operation is symmetric: applying it twice returns the original. Which way do you shift to decode?',
+        'Split the ciphertext letter by letter, move each one 13 places forward (wrap at Z), then join them back.'
+      ],
+      fr: [
+        'Rappelez-vous que l’opération est symétrique : appliquée deux fois, elle revient à l’original. Dans quel sens décaler ?',
+        'Séparez chaque lettre, avancez-la de 13 places (retour à A après Z), puis recollez le résultat.'
+      ]
+    },
     title: {
       zh: '改写版凯撒密码',
       en: 'Modified Caesar cipher',
@@ -283,6 +481,62 @@ Object.assign(window.ENIGMAS, {
     key: 'wifi_audit',
     code: 'EN-04',
     tag: { zh: '网络审计', en: 'Wi-Fi', fr: 'Wi-Fi' },
+    learn: {
+      title: { zh: '三种高风险配置', en: 'Spotting weak Wi-Fi', fr: 'Repérer un Wi-Fi faible' },
+      goal: {
+        zh: '读完这张卡，你会按加密方式、是否开放、默认配置三条线，快速圈出高风险网络。',
+        en: 'After this card you can spot high-risk networks by checking encryption, openness and factory defaults.',
+        fr: 'Après cette fiche, vous repérerez les réseaux à risque en vérifiant chiffrement, ouverture et réglages d’usine.'
+      },
+      points: {
+        zh: [
+          'WEP 是早就过时的加密，几分钟就能破解，口令再复杂也没用。',
+          'OPEN 网络完全不加密；WPS 开启加默认管理员也是常见入口。',
+          '可迁移：家用路由器选 WPA3 或 WPA2，关 WPS，改默认口令并更新固件。'
+        ],
+        en: [
+          'WEP is outdated: it can be broken in minutes, no matter how strong the password is.',
+          'OPEN networks encrypt nothing; enabled WPS plus a default admin account is another way in.',
+          'Practice: use WPA3 or WPA2, disable WPS, change the default password, update firmware.'
+        ],
+        fr: [
+          'Le WEP est obsolète : il se casse en quelques minutes, même avec un mot de passe solide.',
+          'Un réseau OPEN ne chiffre rien ; le WPS actif avec un administrateur par défaut est une autre porte.',
+          'À retenir : WPA3 ou WPA2, WPS désactivé, mot de passe par défaut changé, firmware à jour.'
+        ]
+      },
+      steps: {
+        zh: [
+          '逐行扫「加密方式」列，把 WEP 和 OPEN 的行号先记下来。',
+          '再看「关键配置」列，找出 WPS、默认管理员、旧固件等组合。',
+          '把两类行号合在一起去重，按从小到大写出答案。'
+        ],
+        en: [
+          'Scan the encryption column row by row and note the rows with WEP or OPEN first.',
+          'Then read the configuration column for WPS, default admin accounts and old firmware.',
+          'Merge the two lists, remove duplicates and write the numbers in ascending order.'
+        ],
+        fr: [
+          'Parcourez la colonne chiffrement et notez d’abord les lignes en WEP ou OPEN.',
+          'Lisez ensuite la configuration : WPS, administrateur par défaut, firmware ancien.',
+          'Réunissez les deux listes, supprimez les doublons et écrivez les numéros par ordre croissant.'
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '别被登录页或限速迷惑：先只看「加密方式」这一列，哪些是早已被淘汰的？',
+        '把每行按「加密失效、完全开放、默认配置可被利用」三点过一遍，命中任意一点就留下编号。'
+      ],
+      en: [
+        'Do not be distracted by captive portals or bandwidth limits: read only the encryption column. Which entries are obsolete?',
+        'Check every row against three flags: broken encryption, fully open, exploitable defaults. Keep rows that hit one.'
+      ],
+      fr: [
+        'Ne vous laissez pas distraire par le portail captif ou la limitation de débit : lisez seulement le chiffrement.',
+        'Vérifiez chaque ligne sur trois critères : chiffrement obsolète, réseau ouvert, configuration d’usine exploitable.'
+      ]
+    },
     title: {
       zh: '无线网络安全审计',
       en: 'Wireless network audit',
@@ -394,6 +648,62 @@ Object.assign(window.ENIGMAS, {
     key: 'social_eng',
     code: 'EN-05',
     tag: { zh: '社会工程', en: 'Social engineering', fr: 'Ingénierie sociale' },
+    learn: {
+      title: { zh: '从公开信息拼口令', en: 'Guessable profile passwords', fr: 'Mots de passe devinables' },
+      goal: {
+        zh: '读完这张卡，你会先读题面的口令模式，再从社交资料里为每个空位取一个词。',
+        en: 'After this card you can read the password pattern, then pick one word from the profile for each slot.',
+        fr: 'Après cette fiche, vous saurez lire le motif de mot de passe puis choisir un mot du profil pour chaque case.'
+      },
+      points: {
+        zh: [
+          '社会工程学用公开信息猜密码：城市、宠物、专业方向、年份都很危险。',
+          '先看题面给的「口令模式」，它规定了四段的先后顺序。',
+          '可迁移：少公开个人信息，口令别用宠物名、生日和城市。'
+        ],
+        en: [
+          'Social engineering guesses passwords from public facts: city, pet, field of study and year are risky.',
+          'Read the password pattern first: it fixes the order of the four parts.',
+          'Practice: share less personal data, and never build passwords from pet names, dates or cities.'
+        ],
+        fr: [
+          'L’ingénierie sociale devine les mots de passe à partir d’infos publiques : ville, animal, domaine d’études, année sont risqués.',
+          'Lisez d’abord le motif donné : il fixe l’ordre des quatre parties.',
+          'À retenir : publiez moins d’informations personnelles et évitez animaux, dates et villes dans vos mots de passe.'
+        ]
+      },
+      steps: {
+        zh: [
+          '把题面的口令模式抄下来，确认四个空位各要哪类信息。',
+          '逐条读资料，为每个空位挑一个词，可直接用原文里的写法。',
+          '按模式顺序把四段直接相连，不加空格或分隔符。'
+        ],
+        en: [
+          'Copy the password pattern and note what each of the four slots needs.',
+          'Read the profile line by line and pick one word per slot, keeping the spelling used there.',
+          'Join the four parts in pattern order with no spaces or separators.'
+        ],
+        fr: [
+          'Recopiez le motif et notez ce que demande chacune des quatre cases.',
+          'Lisez le profil ligne par ligne et choisissez un mot par case, en gardant l’orthographe donnée.',
+          'Concaténez les quatre parties dans l’ordre du motif, sans espace ni séparateur.'
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '别急着拼：先把题面的「口令模式」拆成四个空位，再回资料里找每个空位对应哪一条动态。',
+        '每个空位只取一个词（地名、名字、缩写、四位年份），最后按模式顺序直接相连。'
+      ],
+      en: [
+        'Do not assemble yet: split the password pattern into four slots, then find which post fills each slot.',
+        'Take one word per slot (a place, a name, an acronym, a four-digit year) and join them in pattern order.'
+      ],
+      fr: [
+        'Ne concaténez pas tout de suite : découpez le motif en quatre cases, puis cherchez quelle publication remplit chacune.',
+        'Un mot par case (un lieu, un prénom, un sigle, une année sur quatre chiffres), puis concaténez dans l’ordre.'
+      ]
+    },
     title: {
       zh: '进阶社会工程学',
       en: 'Advanced social engineering',
@@ -500,6 +810,62 @@ Object.assign(window.ENIGMAS, {
     key: 'final_algo',
     code: 'EN-06',
     tag: { zh: '算法推理', en: 'Algorithm', fr: 'Algorithme' },
+    learn: {
+      title: { zh: '求和取模再查表', en: 'Sum, modulo, look up', fr: 'Somme, modulo, table' },
+      goal: {
+        zh: '读完这张卡，你会把字符换成 ASCII 码求和、除以 5 取余，再查表并解码。',
+        en: 'After this card you can turn characters into ASCII codes, sum them, take a remainder modulo 5, then look up and decode.',
+        fr: 'Après cette fiche, vous saurez additionner des codes ASCII, prendre un reste modulo 5, puis chercher et déchiffrer.'
+      },
+      points: {
+        zh: [
+          'ASCII 码是字符的编号；题面已经把要用的 5 个值列好了。',
+          '取模就是求余数：总和除以 5 的余数，就是查表用的索引。',
+          '可迁移：简单求和取模会碰撞，口令存储要用加盐慢哈希。'
+        ],
+        en: [
+          'An ASCII code is the number behind a character; the task already lists the five values.',
+          'Modulo means remainder: the remainder of the total divided by 5 is the table index.',
+          'Practice: plain sums and modulos collide; store passwords with a salted slow hash.'
+        ],
+        fr: [
+          'Le code ASCII est le numéro d’un caractère ; l’énoncé donne déjà les cinq valeurs.',
+          'Le modulo donne le reste : somme divisée par 5, le reste est l’index de la table.',
+          'À retenir : une somme suivie d’un modulo entre en collision ; stockez les mots de passe hachés.'
+        ]
+      },
+      steps: {
+        zh: [
+          '把题面列出的 5 个 ASCII 值抄下来，逐个相加得到总和。',
+          '把总和除以 5，记下余数，它就是要用的索引。',
+          '按索引取代码词，做一次 ROT-13，得到最终口令。'
+        ],
+        en: [
+          'Copy the five ASCII values from the task and add them to get the total.',
+          'Divide the total by 5 and write down the remainder: that is the index.',
+          'Take the code word at that index, apply ROT-13 once, and read the final password.'
+        ],
+        fr: [
+          'Recopiez les cinq valeurs ASCII de l’énoncé et additionnez-les pour obtenir le total.',
+          'Divisez le total par 5 et notez le reste : c’est l’index à utiliser.',
+          'Prenez le mot de code à cet index, appliquez ROT-13 une fois et lisez le mot de passe.'
+        ]
+      }
+    },
+    nudges: {
+      zh: [
+        '先检查加法：题面把 5 个 ASCII 值都列出来了，逐个相加，别漏项也别多数。',
+        '把总和除以 5，余数就是索引；用这个索引回表里取词，再按第三关学过的 ROT-13 还原。'
+      ],
+      en: [
+        'Check the addition first: all five ASCII values are listed in the task — add them one by one.',
+        'Divide the total by 5; the remainder is the index. Take that table entry and decode it with ROT-13.'
+      ],
+      fr: [
+        'Vérifiez d’abord l’addition : les cinq valeurs ASCII sont données dans l’énoncé, additionnez-les une à une.',
+        'Divisez le total par 5 ; le reste est l’index. Prenez l’entrée correspondante et déchiffrez-la en ROT-13.'
+      ]
+    },
     title: {
       zh: '最终中和算法',
       en: 'Final neutralization algorithm',
