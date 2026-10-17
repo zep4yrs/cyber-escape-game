@@ -306,3 +306,26 @@ body.is-focus .focus-fab {
     animation: none !important;
   }
 }
+
+/* ---------- 统一标题：墨色正文 + 靛蓝强调线（不再用渐变字） ---------- */
+.hero__mark {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: var(--ink);
+  text-shadow: none;
+}
+
+.pagehead--thunder h1 {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: var(--ink);
+}
+
+.glossary-item__term {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: var(--ink);
+}
