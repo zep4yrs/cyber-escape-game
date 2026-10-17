@@ -60,7 +60,6 @@ def parse_ranges(text):
 
 jobs = [
     ("lxgwwenkai-regular.css", codepoints),
-    ("lxgwwenkaimono-regular.css", mono_points),
 ]
 needed = {}
 for css_name, points in jobs:
