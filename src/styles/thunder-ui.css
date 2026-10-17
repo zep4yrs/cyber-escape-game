@@ -786,6 +786,10 @@ body.is-focus .focus-fab {
 }
 
 @media (max-width: 720px) {
+  .ops-chip {
+    display: none;
+  }
+
   .hero__coords {
     gap: 8px 12px;
     font-size: 9px;
