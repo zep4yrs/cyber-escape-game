@@ -34,8 +34,10 @@ src/
     RichBlocks.tsx      课程内容块渲染器（段落/列表/步骤/提示/表格/代码/对比）
     Quiz.tsx            选择/填空练习，即时反馈
     game/               EnigmaPlayer（单关）与 ChallengeRunner（30 分钟综合演练）
+    fx/                 开屏、氛围层、指针聚光（Atmosphere / BootIntro / Spotlight）
+    motion/             模块卡、进度环、数字滚动、滚动入场
   pages/                首页 / 模块页 / 术语表 / 综合演练 / 404
-  styles/               设计令牌、基础排版、页面与组件样式
+  styles/               设计令牌、雷霆档案视觉层、基础排版、页面与组件样式
 scripts/
   convert-enigmas.cjs   旧数据 → src/content/enigmas.ts
   fonts/                本地字体子集生成工具
@@ -43,6 +45,18 @@ legacy/                 旧版纯静态站点（仅存档参考，不参与构�
 ```
 
 技术栈：React 19 + TypeScript + Vite；路由用 React Router；无后端，纯静态部署。
+
+## 视觉系统：雷霆档案 THUNDER ARCHIVE
+
+保留 work.feng-qiao.top 的雾蓝纸面与靛蓝主色，叠加电光紫 / 雷暴青 / 信号琥珀：
+
+- **开屏**：每次会话一次的解密 Boot 动画，可点任意键或 Esc 跳过；`prefers-reduced-motion` 下不播放。
+- **氛围层**：固定光晕、扫描线、噪点、暗角、四角 HUD 刻度；hero 指针跟随聚光（桌面）。
+- **首页**：模块档案卡（幽灵图标 / 电流扫光 / 指针倾斜 / 进度条）、雷霆进度环（渐变描边 + 刻度 + 数字滚动）、威胁情报 ticker。
+- **阅读页**：顶部阅读进度条；`F` 进入**专注模式**（隐藏导航 / 目录 / 页脚，专注正文），`?` 查看快捷键，`Esc` 退出；完成模块时出现归档横幅。
+- **实战**：深色玻璃 HUD、计时压力光、尝试次数 pips、方向提示/反馈芯片、评分与结算动效。
+- **降级**：所有动效在 `prefers-reduced-motion: reduce` 下关闭或直接显示终态；触屏禁用倾斜/指针光效。
+- **字体**：本地 WenKai 子集仅用于标题与导语，正文使用系统无衬线，`font-display: swap`。
 
 ## 本地运行
 

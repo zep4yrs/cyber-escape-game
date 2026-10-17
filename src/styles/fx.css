@@ -1,0 +1,739 @@
+/* ==========================================================================
+   雷霆档案 THUNDER ARCHIVE · FX 层
+   1) Atmosphere 氛围层  2) Spotlight 指针聚光  3) BootIntro 开屏
+   —— 低透明度叠加，动画只作用于 transform / opacity；
+      prefers-reduced-motion 统一降级为静态或隐藏。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 氛围层 Atmosphere
+   -------------------------------------------------------------------------- */
+
+.fx-atmos {
+  position: fixed;
+  inset: 0;
+  z-index: -1; /* 低于正文内容，只落在纸面背景上 */
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout paint;
+}
+
+/* 径向电光光晕 */
+.fx-atmos__glow {
+  position: absolute;
+  inset: -10%;
+  background:
+    radial-gradient(42% 38% at 10% 4%, var(--volt-soft), transparent 68%),
+    radial-gradient(36% 32% at 92% 2%, var(--thunder-soft), transparent 70%),
+    radial-gradient(48% 42% at 82% 98%, var(--haze-cyan), transparent 74%),
+    radial-gradient(40% 36% at 4% 92%, var(--haze-violet), transparent 76%),
+    radial-gradient(90% 60% at 50% 46%, rgba(255, 255, 255, 0.4), transparent 72%);
+  opacity: 0.95;
+}
+
+/* 斜向光束 */
+.fx-atmos__beams {
+  position: absolute;
+  inset: -24% -14%;
+}
+
+.fx-atmos__beam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(110px, 15vw, 250px);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--volt-soft) 26%,
+    var(--thunder-soft) 54%,
+    transparent 82%
+  );
+  opacity: 0.5;
+  will-change: transform, opacity;
+  animation: fx-beam-drift 30s var(--ease-inout) infinite alternate;
+}
+
+.fx-atmos__beam--a {
+  --fx-rot: 15deg;
+  left: 7%;
+  transform: rotate(var(--fx-rot));
+}
+
+.fx-atmos__beam--b {
+  --fx-rot: -19deg;
+  right: 9%;
+  width: clamp(90px, 11vw, 190px);
+  opacity: 0.4;
+  animation-duration: 38s;
+  animation-delay: -9s;
+  transform: rotate(var(--fx-rot));
+}
+
+.fx-atmos__beam--c {
+  --fx-rot: -7deg;
+  left: 46%;
+  width: clamp(70px, 8vw, 150px);
+  opacity: 0.28;
+  animation-duration: 46s;
+  animation-delay: -21s;
+  transform: rotate(var(--fx-rot));
+}
+
+/* 静态扫描线 */
+.fx-atmos__scan {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    180deg,
+    var(--line-soft) 0,
+    var(--line-soft) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  opacity: 0.6;
+}
+
+/* 缓慢下移的扫描带 */
+.fx-atmos__sweep {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -25vh;
+  height: clamp(90px, 15vh, 170px);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--thunder-soft) 42%,
+    var(--volt-soft) 58%,
+    transparent
+  );
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: fx-sweep 13s var(--ease-thunder) infinite;
+  animation-delay: 1.2s;
+}
+
+/* 噪点呼吸 */
+.fx-atmos__noise {
+  position: absolute;
+  inset: 0;
+  background-image: var(--noise);
+  background-size: 140px 140px;
+  opacity: 0.65;
+  will-change: opacity;
+  animation: fx-noise-breathe 9s var(--ease-inout) infinite;
+}
+
+/* 暗角 */
+.fx-atmos__vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 96% at 50% 36%, transparent 54%, rgba(22, 26, 58, 0.06) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent 20%, transparent 80%, rgba(22, 26, 58, 0.05));
+}
+
+/* 四角 HUD 刻度 */
+.fx-atmos__hud {
+  position: absolute;
+  /* 顶部让开吸顶导航，避免 HUD 角标被 header 盖住 */
+  inset: calc(var(--head-h) + clamp(10px, 1.2vw, 16px)) clamp(12px, 1.6vw, 20px) clamp(12px, 1.6vw, 20px);
+}
+
+.fx-atmos__corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  opacity: 0.55;
+}
+
+.fx-atmos__corner::after {
+  content: attr(data-tag);
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--ink-44);
+  white-space: nowrap;
+}
+
+.fx-atmos__corner--tl {
+  top: 0;
+  left: 0;
+  border-top: 1px solid var(--volt-line);
+  border-left: 1px solid var(--thunder-line);
+}
+
+.fx-atmos__corner--tl::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 12px;
+  height: 1px;
+  background: var(--volt-line);
+}
+
+.fx-atmos__corner--tl::after {
+  top: -2px;
+  left: 32px;
+}
+
+.fx-atmos__corner--tr {
+  top: 0;
+  right: 0;
+  border-top: 1px solid var(--volt-line);
+  border-right: 1px solid var(--thunder-line);
+}
+
+.fx-atmos__corner--tr::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 0;
+  width: 12px;
+  height: 1px;
+  background: var(--volt-line);
+}
+
+.fx-atmos__corner--tr::after {
+  top: -2px;
+  right: 32px;
+}
+
+.fx-atmos__corner--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom: 1px solid var(--thunder-line);
+  border-left: 1px solid var(--volt-line);
+}
+
+.fx-atmos__corner--bl::before {
+  content: '';
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  width: 12px;
+  height: 1px;
+  background: var(--thunder-line);
+}
+
+.fx-atmos__corner--bl::after {
+  bottom: -2px;
+  left: 32px;
+}
+
+.fx-atmos__corner--br {
+  bottom: 0;
+  right: 0;
+  border-bottom: 1px solid var(--thunder-line);
+  border-right: 1px solid var(--volt-line);
+}
+
+.fx-atmos__corner--br::before {
+  content: '';
+  position: absolute;
+  bottom: 6px;
+  right: 0;
+  width: 12px;
+  height: 1px;
+  background: var(--thunder-line);
+}
+
+.fx-atmos__corner--br::after {
+  bottom: -2px;
+  right: 32px;
+}
+
+/* 底部遥测细线 */
+.fx-atmos__telemetry {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: clamp(10px, 1.6vh, 18px);
+  height: 10px;
+  opacity: 0.6;
+}
+
+.fx-atmos__telemetry::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-strong) 12%, var(--line-strong) 88%, transparent);
+}
+
+.fx-atmos__telemetry-ticks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 5px;
+  background-image: repeating-linear-gradient(90deg, var(--line-strong) 0 1px, transparent 1px 28px);
+  opacity: 0.45;
+}
+
+.fx-atmos__telemetry-trace {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: clamp(48px, 8vw, 120px);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--thunder), transparent);
+  box-shadow: var(--glow-soft);
+  will-change: transform;
+  animation: fx-telemetry 16s linear infinite;
+}
+
+/* --------------------------------------------------------------------------
+   2. 指针聚光 Spotlight
+   -------------------------------------------------------------------------- */
+
+.fx-spotlight {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  clip-path: inset(0);
+  transition: opacity 0.45s var(--ease-out);
+  will-change: opacity;
+}
+
+.fx-spotlight.is-on {
+  opacity: 1;
+}
+
+.fx-spotlight::before {
+  content: '';
+  position: absolute;
+  left: var(--fx-spot-x, 50vw);
+  top: var(--fx-spot-y, 38vh);
+  width: clamp(340px, 36vw, 640px);
+  aspect-ratio: 1;
+  transform: translate3d(-50%, -50%, 0);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--volt-soft) 0%, var(--thunder-soft) 46%, transparent 72%);
+}
+
+.fx-spotlight::after {
+  content: '';
+  position: absolute;
+  left: var(--fx-spot-x, 50vw);
+  top: var(--fx-spot-y, 38vh);
+  width: clamp(150px, 16vw, 280px);
+  aspect-ratio: 1;
+  transform: translate3d(-50%, -50%, 0);
+  border-radius: 50%;
+  border: 1px solid var(--volt-line);
+  background: radial-gradient(circle, var(--thunder-soft) 0%, transparent 64%);
+  opacity: 0.85;
+}
+
+/* 触屏 / 粗指针环境不启用 */
+@media (hover: none), (pointer: coarse) {
+  .fx-spotlight {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. 开屏 BootIntro
+   -------------------------------------------------------------------------- */
+
+.fx-boot {
+  --boot-ink: rgba(240, 243, 255, 0.92);
+  --boot-dim: rgba(204, 212, 255, 0.62);
+  --boot-line: rgba(138, 107, 255, 0.42);
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 4vw, 40px);
+  color: var(--boot-ink);
+  background:
+    radial-gradient(120% 92% at 50% 0%, rgba(138, 107, 255, 0.18), transparent 62%),
+    radial-gradient(96% 74% at 84% 100%, rgba(75, 225, 255, 0.12), transparent 66%),
+    rgba(11, 15, 36, 0.94);
+  cursor: pointer;
+  user-select: none;
+  animation: fx-boot-fade 0.3s var(--ease-out) both;
+}
+
+.fx-boot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(238, 241, 255, 0.035) 0,
+    rgba(238, 241, 255, 0.035) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+}
+
+.fx-boot.is-out {
+  opacity: 0;
+  transform: scale(1.008);
+  transition: opacity 0.3s var(--ease-thunder), transform 0.3s var(--ease-thunder);
+}
+
+.fx-boot__frame {
+  position: relative;
+  width: min(560px, 100%);
+  padding: clamp(20px, 3.4vw, 32px) clamp(18px, 3vw, 30px) clamp(16px, 2.4vw, 22px);
+  border: 1px solid var(--boot-line);
+  border-radius: var(--r-sm);
+  background: linear-gradient(180deg, rgba(24, 28, 64, 0.92), rgba(15, 19, 46, 0.95));
+  box-shadow: var(--glow-brand);
+  animation: fx-boot-rise 0.5s var(--ease-thunder) both;
+}
+
+.fx-boot__frame::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--thunder-line);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.fx-boot__frame::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--volt), var(--thunder));
+  box-shadow: var(--glow-soft);
+}
+
+.fx-boot.is-out .fx-boot__frame {
+  opacity: 0;
+  transform: translate3d(0, -10px, 0) scale(0.985);
+  transition: opacity 0.22s var(--ease-out), transform 0.28s var(--ease-thunder);
+}
+
+.fx-boot__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 2px;
+}
+
+.fx-boot__label {
+  display: inline-flex;
+  align-items: center;
+  color: var(--boot-ink);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+}
+
+.fx-boot__caret {
+  display: inline-block;
+  width: 7px;
+  height: 12px;
+  margin-left: 8px;
+  background: var(--thunder);
+  animation: fx-caret 1s steps(2, start) infinite;
+}
+
+.fx-boot__code {
+  color: var(--volt);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+}
+
+.fx-boot__name {
+  margin: 14px 0 6px;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 4.4vw, 38px);
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  color: #f5f7ff;
+}
+
+.fx-boot__glyphs {
+  margin: 8px 0 16px;
+  min-height: 1.8em;
+  color: var(--thunder);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  line-height: 1.8;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 0.72;
+}
+
+.fx-boot__bar {
+  position: relative;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(238, 241, 255, 0.12);
+  overflow: hidden;
+}
+
+.fx-boot__bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--volt), var(--thunder));
+  box-shadow: var(--glow-soft);
+  transition: width 90ms linear;
+}
+
+.fx-boot__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.fx-boot__status {
+  color: var(--boot-dim);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+}
+
+.fx-boot__status b {
+  color: var(--thunder);
+  font-weight: 600;
+}
+
+.fx-boot__skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--thunder);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+}
+
+.fx-boot__esc {
+  padding: 2px 6px;
+  border: 1px solid var(--thunder-line);
+  border-radius: 3px;
+  color: var(--boot-dim);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+}
+
+.fx-boot__hint {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(14px, 3vh, 28px);
+  transform: translateX(-50%);
+  color: rgba(204, 212, 255, 0.38);
+  font-size: 9.5px;
+  letter-spacing: 0.3em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   4. Keyframes
+   -------------------------------------------------------------------------- */
+
+@keyframes fx-beam-drift {
+  0% {
+    transform: rotate(var(--fx-rot, 12deg)) translate3d(0, -2%, 0) scaleY(1);
+    opacity: 0.32;
+  }
+  50% {
+    transform: rotate(calc(var(--fx-rot, 12deg) + 4deg)) translate3d(3.5%, 1%, 0) scaleY(1.05);
+    opacity: 0.58;
+  }
+  100% {
+    transform: rotate(var(--fx-rot, 12deg)) translate3d(-3.5%, 2%, 0) scaleY(1.02);
+    opacity: 0.38;
+  }
+}
+
+@keyframes fx-sweep {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  6% {
+    opacity: 0.5;
+  }
+  70% {
+    opacity: 0.34;
+  }
+  100% {
+    transform: translate3d(0, 135vh, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-noise-breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.82;
+  }
+}
+
+@keyframes fx-telemetry {
+  0% {
+    transform: translate3d(-10vw, 0, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.9;
+  }
+  92% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate3d(100vw, 0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes fx-boot-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fx-boot-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes fx-caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. 响应式降级
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .fx-atmos__beam--c {
+    display: none;
+  }
+
+  .fx-atmos__corner::after {
+    display: none;
+  }
+
+  .fx-atmos__telemetry {
+    left: 16px;
+    right: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .fx-atmos__beam--b {
+    display: none;
+  }
+
+  .fx-atmos__sweep,
+  .fx-atmos__telemetry-trace {
+    display: none;
+  }
+
+  .fx-atmos__corner {
+    width: 16px;
+    height: 16px;
+    opacity: 0.42;
+  }
+
+  .fx-atmos__corner--tl::before,
+  .fx-atmos__corner--tr::before,
+  .fx-atmos__corner--bl::before,
+  .fx-atmos__corner--br::before {
+    width: 7px;
+  }
+
+  .fx-boot__frame {
+    padding: 18px 16px 14px;
+  }
+
+  .fx-boot__top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+
+  .fx-boot__glyphs {
+    display: none;
+  }
+
+  .fx-boot__hint {
+    letter-spacing: 0.18em;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. prefers-reduced-motion：全部动画 / 过渡降级
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-atmos__beam,
+  .fx-atmos__sweep,
+  .fx-atmos__noise,
+  .fx-atmos__telemetry-trace,
+  .fx-boot,
+  .fx-boot__frame,
+  .fx-boot__caret,
+  .fx-boot__bar-fill {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .fx-atmos__sweep,
+  .fx-atmos__telemetry-trace {
+    display: none;
+  }
+
+  .fx-atmos__beam {
+    opacity: 0.26;
+    transform: rotate(var(--fx-rot, 10deg));
+  }
+
+  .fx-boot,
+  .fx-spotlight {
+    display: none !important;
+  }
+}
+
+@media print {
+  .fx-atmos,
+  .fx-boot,
+  .fx-spotlight {
+    display: none !important;
+  }
+}

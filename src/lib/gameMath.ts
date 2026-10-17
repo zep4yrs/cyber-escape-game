@@ -118,3 +118,49 @@ export function fallbackLabel(t: (key: string) => string, key: string, fallbackK
   const value = t(key);
   return value === key ? t(fallbackKey) : value;
 }
+
+/* --------------------------------------------------------------------------
+   雷霆档案 · 评级（纯函数，仅供 UI 展示；不影响计分公式）
+   -------------------------------------------------------------------------- */
+
+export type Rank = 'S' | 'A' | 'B' | 'C';
+
+const RANK_POINTS: Record<Rank, number> = { S: 4, A: 3, B: 2, C: 1 };
+
+export interface RankInput {
+  solved: boolean;
+  revealed: boolean;
+  /** 该关累计错答次数（不含答对那次） */
+  attempts: number;
+  /** 该关已用提示条数 */
+  hints: number;
+}
+
+/**
+ * 单关轻量评级：只看「错答次数 + 提示次数」，不参与计分。
+ * 揭晓（revealed）或未通关一律 C。
+ */
+export function computeRank({ solved, revealed, attempts, hints }: RankInput): Rank {
+  if (!solved || revealed) return 'C';
+  if (attempts <= 1 && hints === 0) return 'S';
+  if (attempts <= 2 && hints <= 1) return 'A';
+  if (attempts <= 4 && hints <= 2) return 'B';
+  return 'C';
+}
+
+/** 把评级折算成点数（供综合演练求平均） */
+export function rankPoints(rank: Rank): number {
+  return RANK_POINTS[rank] ?? 1;
+}
+
+/** 综合演练总评级：六关评级取平均（未完成按 C 计） */
+export function computeOverallRank(ranks: Rank[]): Rank {
+  if (!ranks.length) return 'C';
+  const total = ranks.reduce((sum, rank) => sum + rankPoints(rank), 0);
+  const average = total / ranks.length;
+  if (average >= 3.5) return 'S';
+  if (average >= 2.75) return 'A';
+  if (average >= 1.75) return 'B';
+  return 'C';
+}
+

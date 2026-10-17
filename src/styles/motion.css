@@ -1,0 +1,662 @@
+/* ==========================================================================
+   雷霆档案 THUNDER ARCHIVE · 动效组件样式（B 路）
+   —— Reveal / CountUp / ThunderRing / ModuleCard
+   —— 只用 transform / opacity / 一次性描边动画；reduced-motion 全量降级
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Reveal —— 滚动入场
+   -------------------------------------------------------------------------- */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition:
+    opacity 0.7s var(--ease-out) var(--reveal-delay, 0ms),
+    transform 0.7s var(--ease-out) var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
+}
+
+/* --------------------------------------------------------------------------
+   2. CountUp —— 数字滚动
+   -------------------------------------------------------------------------- */
+.countup {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: inherit;
+}
+
+/* --------------------------------------------------------------------------
+   3. ThunderRing —— 渐变进度环 + 双环光晕 + 细刻度 + 中心数字
+   -------------------------------------------------------------------------- */
+.thunder-ring {
+  --ring-a: var(--volt);
+  --ring-b: var(--thunder);
+  --ring-size: 132px;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  isolation: isolate;
+}
+
+.thunder-ring[data-tone='thunder'] {
+  --ring-a: var(--thunder);
+  --ring-b: var(--flare);
+}
+
+.thunder-ring[data-tone='flare'] {
+  --ring-a: var(--flare);
+  --ring-b: var(--volt);
+}
+
+/* 内圈雾蓝玻璃盘：让环看起来像档案柜上的仪表 */
+.thunder-ring::before {
+  content: '';
+  position: absolute;
+  inset: 13%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 36%, #ffffff 0%, rgba(255, 255, 255, 0.9) 48%, rgba(234, 239, 251, 0.55) 100%);
+  box-shadow:
+    inset 0 0 0 1px var(--line-soft),
+    inset 0 0 26px rgba(74, 78, 224, 0.07);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.thunder-ring__svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.thunder-ring__track {
+  stroke: var(--surface-3);
+}
+
+.thunder-ring__ticks line {
+  stroke: var(--ink-28);
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+
+.thunder-ring__ticks line.is-major {
+  stroke: var(--ink-44);
+  stroke-width: 1.5;
+}
+
+.thunder-ring__orbit {
+  opacity: 0.55;
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+  animation: thunder-ring-spin 38s linear infinite;
+}
+
+.thunder-ring__halo {
+  opacity: 0.42;
+  filter: blur(7px);
+  animation: thunder-ring-breathe 5.2s var(--ease-inout, ease-in-out) infinite;
+}
+
+.thunder-ring__halo--b {
+  opacity: 0.3;
+  filter: blur(13px);
+  animation-delay: 1.4s;
+}
+
+.thunder-ring__arc {
+  filter: drop-shadow(0 0 5px rgba(75, 225, 255, 0.45));
+  transition: stroke-dashoffset 1.15s var(--ease-thunder);
+}
+
+.thunder-ring__spark {
+  fill: var(--ring-b);
+}
+
+.thunder-ring__spark-halo {
+  fill: var(--ring-b);
+  opacity: 0.3;
+  filter: blur(4px);
+}
+
+.thunder-ring__center {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.thunder-ring__num {
+  font-family: var(--font-display);
+  font-size: calc(var(--ring-size) * 0.255);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.thunder-ring__num em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: calc(var(--ring-size) * 0.085);
+  letter-spacing: 0;
+  color: var(--ink-44);
+  margin-left: 2px;
+}
+
+.thunder-ring__label {
+  font-family: var(--font-mono);
+  font-size: clamp(8.5px, calc(var(--ring-size) * 0.066), 11px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-44);
+  line-height: 1.3;
+  max-width: 86%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --------------------------------------------------------------------------
+   4. ModuleCard —— 硬核档案卡
+   -------------------------------------------------------------------------- */
+.mcard {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --shift-x: 0px;
+  --shift-y: 0px;
+  --gx: 0px;
+  --gy: 0px;
+  position: relative;
+  display: grid;
+  gap: 13px;
+  padding: 20px 22px 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  color: var(--ink);
+  text-decoration: none;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: var(--shadow-1);
+  background:
+    var(--noise) 0 0 / 140px 140px,
+    linear-gradient(rgba(38, 47, 110, 0.05) 1px, transparent 1px) 0 0 / 26px 26px,
+    linear-gradient(90deg, rgba(38, 47, 110, 0.05) 1px, transparent 1px) 0 0 / 26px 26px,
+    var(--card-grad);
+  transform: perspective(1000px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y))
+    translate3d(var(--shift-x), var(--shift-y), 0);
+  transition:
+    transform 0.55s var(--ease-thunder),
+    box-shadow 0.35s var(--ease-out),
+    border-color 0.35s var(--ease-out);
+  will-change: transform;
+}
+
+.mcard[data-tilt='on'] {
+  transition:
+    transform 0.1s linear,
+    box-shadow 0.35s var(--ease-out),
+    border-color 0.35s var(--ease-out);
+}
+
+.mcard:hover {
+  border-color: transparent;
+  box-shadow: var(--glow-brand), var(--shadow-2);
+}
+
+.mcard:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-color: transparent;
+}
+
+/* 内层发丝双框 */
+.mcard::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid var(--line-soft);
+  border-radius: 11px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.85;
+  transition:
+    border-color 0.35s var(--ease-out),
+    opacity 0.35s var(--ease-out);
+}
+
+.mcard:hover::before {
+  border-color: var(--volt-line);
+  opacity: 1;
+}
+
+/* 渐变描边（mask 只保留 1px 边框） */
+.mcard__frame {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 1px;
+  border-radius: inherit;
+  background: var(--edge-grad);
+  opacity: 0.5;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  transition: opacity 0.35s var(--ease-out);
+}
+
+.mcard:hover .mcard__frame {
+  opacity: 1;
+}
+
+/* hover 电流扫过（一次性，不循环） */
+.mcard__sweep {
+  position: absolute;
+  top: -10%;
+  left: 0;
+  z-index: 2;
+  width: 38%;
+  height: 120%;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(138, 107, 255, 0.18) 34%,
+    rgba(75, 225, 255, 0.42) 49%,
+    rgba(138, 107, 255, 0.16) 64%,
+    transparent 100%
+  );
+  transform: translate3d(-160%, 0, 0) skewX(-12deg);
+}
+
+.mcard:hover .mcard__sweep {
+  animation: mcard-sweep 1.05s var(--ease-thunder) 1 both;
+}
+
+/* 跟随指针的冷光（只动 transform / opacity） */
+.mcard__glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: 280px;
+  height: 280px;
+  margin: -140px 0 0 -140px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(75, 225, 255, 0.2), rgba(138, 107, 255, 0.11) 46%, transparent 68%);
+  transform: translate3d(var(--gx), var(--gy), 0);
+  transition: opacity 0.35s var(--ease-out);
+}
+
+.mcard:hover .mcard__glow {
+  opacity: 1;
+}
+
+/* 巨型幽灵图标 / 序号 */
+.mcard__ghost {
+  position: absolute;
+  right: -16px;
+  top: 4px;
+  z-index: 0;
+  color: rgba(74, 78, 224, 0.09);
+  transform: rotate(-8deg);
+  pointer-events: none;
+  transition: color 0.35s var(--ease-out), transform 0.5s var(--ease-thunder);
+}
+
+.mcard__ghost svg {
+  width: clamp(118px, 17vw, 200px);
+  height: auto;
+}
+
+.mcard:hover .mcard__ghost {
+  color: rgba(138, 107, 255, 0.16);
+  transform: rotate(-4deg) scale(1.02);
+}
+
+.mcard__serial {
+  position: absolute;
+  right: 12px;
+  bottom: -26px;
+  z-index: 0;
+  font-family: var(--font-display);
+  font-size: clamp(76px, 9vw, 112px);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: rgba(22, 26, 58, 0.045);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 卡片内容行 */
+.mcard__head {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 24px;
+}
+
+.mcard__code {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-44);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mcard__lamp {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--thunder);
+  box-shadow:
+    0 0 0 1px rgba(75, 225, 255, 0.5),
+    0 0 10px rgba(75, 225, 255, 0.75);
+}
+
+.mcard[data-status='active'] .mcard__lamp {
+  background: var(--volt);
+  box-shadow:
+    0 0 0 1px var(--volt-line),
+    0 0 10px rgba(138, 107, 255, 0.7);
+}
+
+.mcard[data-status='done'] .mcard__lamp {
+  background: var(--ok);
+  box-shadow:
+    0 0 0 1px var(--ok-line),
+    0 0 10px rgba(31, 107, 72, 0.4);
+}
+
+.mcard__status {
+  flex: none;
+  padding: 2px 9px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(38, 47, 110, 0.12);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.mcard__body {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 4px;
+  max-width: 82%;
+}
+
+.mcard__title {
+  font-family: var(--font-display);
+  font-size: clamp(21px, 2.1vw, 26px);
+  line-height: 1.34;
+  letter-spacing: 0.01em;
+}
+
+.mcard__sub {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--ink-62);
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+.mcard__meta {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mcard__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  color: var(--ink-62);
+  white-space: nowrap;
+}
+
+.mcard__foot {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.mcard__bar {
+  position: relative;
+  flex: 1;
+  height: 5px;
+  min-width: 40px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  overflow: hidden;
+}
+
+.mcard__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 1px, transparent 1px 8px);
+  pointer-events: none;
+}
+
+.mcard__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transform-origin: left center;
+  transform: scaleX(var(--p, 0));
+  background: linear-gradient(90deg, var(--brand) 0%, var(--volt) 52%, var(--thunder) 100%);
+  box-shadow: 0 0 10px rgba(138, 107, 255, 0.45);
+  transition: transform 0.95s var(--ease-thunder);
+}
+
+.mcard__pct {
+  flex: none;
+  min-width: 34px;
+  text-align: right;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  color: var(--ink-44);
+}
+
+.mcard__go {
+  flex: none;
+  color: var(--ink-44);
+  transition:
+    transform 0.3s var(--ease-out),
+    color 0.3s var(--ease-out);
+}
+
+.mcard:hover .mcard__go {
+  color: var(--brand);
+  transform: translateX(3px);
+}
+
+/* --------------------------------------------------------------------------
+   5. Keyframes
+   -------------------------------------------------------------------------- */
+@keyframes mcard-sweep {
+  0% {
+    opacity: 0;
+    transform: translate3d(-160%, 0, 0) skewX(-12deg);
+  }
+  14% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(430%, 0, 0) skewX(-12deg);
+  }
+}
+
+@keyframes thunder-ring-breathe {
+  0%,
+  100% {
+    opacity: 0.34;
+  }
+  50% {
+    opacity: 0.58;
+  }
+}
+
+@keyframes thunder-ring-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. 响应式
+   -------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+  .mcard {
+    gap: 11px;
+    padding: 17px 17px 15px;
+    border-radius: 14px;
+  }
+
+  .mcard__body {
+    max-width: 100%;
+  }
+
+  .mcard__ghost svg {
+    width: 120px;
+  }
+
+  .mcard__serial {
+    font-size: 72px;
+    right: 8px;
+    bottom: -16px;
+  }
+
+  .mcard__title {
+    font-size: 21px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. 触屏 / 粗指针：禁用倾斜、光斑与电流扫过
+   -------------------------------------------------------------------------- */
+@media (hover: none), (pointer: coarse) {
+  .mcard {
+    transform: none !important;
+    will-change: auto;
+  }
+
+  .mcard__glow,
+  .mcard__sweep {
+    display: none;
+  }
+
+  .mcard:hover .mcard__ghost {
+    transform: rotate(-8deg);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   8. prefers-reduced-motion：全量降级为静态
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal.is-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+
+  .mcard,
+  .mcard[data-tilt='on'] {
+    transform: none !important;
+    transition: box-shadow 0.2s linear, border-color 0.2s linear;
+    will-change: auto;
+  }
+
+  .mcard::before,
+  .mcard__frame,
+  .mcard__glow,
+  .mcard__bar-fill,
+  .mcard__go,
+  .mcard__ghost {
+    transition: none;
+  }
+
+  .mcard__sweep {
+    display: none;
+    animation: none;
+  }
+
+  .mcard__bar-fill {
+    transform: scaleX(var(--p, 0));
+  }
+
+  .thunder-ring__halo,
+  .thunder-ring__orbit {
+    animation: none;
+  }
+
+  .thunder-ring__arc {
+    transition: none;
+  }
+
+  .thunder-ring__spark-halo {
+    opacity: 0.3;
+  }
+
+  .countup {
+    transition: none;
+  }
+}

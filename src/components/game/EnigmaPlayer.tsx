@@ -1,11 +1,12 @@
 /// <reference types="vite/client" />
 /* ==========================================================================
-   EnigmaPlayer · 单关玩家（引导模式）
+   EnigmaPlayer · 单关玩家（引导模式）— 雷霆档案 HUD 版
    --------------------------------------------------------------------------
    · 由模块页使用：<EnigmaPlayer enigma={enigma} onSolved={...} />
    · 内部 EnigmaPlay 也供 ChallengeRunner 复用（同一套答题/提示/揭晓逻辑）
-   · 规则：5 次尝试；前 2 次错答免罚并展示 nudges；第 3 次起 −10；
+   · 规则与旧版完全一致：5 次尝试；前 2 次错答免罚并展示 nudges；第 3 次起 −10；
      提示每条 −20（最多 3 条）；答对/揭晓后展示答案与 explain
+   · 视觉：尝试 pips、电流芯片反馈、答错 shake / 答对 pulse、结算评级 S/A/B/C
    ========================================================================== */
 
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
@@ -14,12 +15,14 @@ import { useLang } from '../../i18n/LangContext';
 import {
   answerText,
   ATTEMPT_PENALTY,
+  computeRank,
   fallbackLabel,
   FREE_ATTEMPTS,
   isAcceptedAnswer,
   MAX_ATTEMPTS,
   MAX_HINTS,
-  nudgeIndexForAttempt
+  nudgeIndexForAttempt,
+  type Rank
 } from '../../lib/gameMath';
 import '../../styles/game.css';
 
@@ -71,6 +74,88 @@ interface Settled {
   revealed: boolean;
 }
 
+const PIP_INDEXES = Array.from({ length: MAX_ATTEMPTS }, (_, index) => index);
+
+/** 数值滚动（雷霆结算 / HUD 分数用）；reduced-motion 时直接落到终值 */
+function useCountUp(target: number, duration = 680): number {
+  const [display, setDisplay] = useState(target);
+  const fromRef = useRef(target);
+
+  useEffect(() => {
+    let frame = 0;
+    const reduce =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const from = fromRef.current;
+    if (reduce || from === target) {
+      fromRef.current = target;
+      setDisplay(target);
+      return;
+    }
+    const start = window.performance.now();
+    const step = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(from + (target - from) * eased));
+      if (progress < 1) frame = window.requestAnimationFrame(step);
+      else fromRef.current = target;
+    };
+    frame = window.requestAnimationFrame(step);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      fromRef.current = target;
+    };
+  }, [target, duration]);
+
+  return display;
+}
+
+function IcoCheck() {
+  return (
+    <svg className="game-ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M2.6 8.4 6.1 12 13.5 3.9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IcoBolt() {
+  return (
+    <svg className="game-ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M9.4 1 3 9.1h3.2L5.6 15 12.6 6.5H9l0.4-5.5Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IcoAlert() {
+  return (
+    <svg className="game-ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 1.6 15 14H1L8 1.6Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M8 6v3.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <circle cx="8" cy="11.6" r="0.9" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ToneIcon({ tone }: { tone: Tone }) {
+  if (tone === 'ok') return <IcoCheck />;
+  if (tone === 'bad') return <IcoAlert />;
+  return <IcoBolt />;
+}
+
 /**
  * 引导模式玩家：只负责一道关卡，答对/揭晓后回调 onSolved。
  * 不在此组件内写学习进度（moduleId 由调用方持有）。
@@ -101,6 +186,8 @@ export function EnigmaPlay({
   const inputRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const previousKeyRef = useRef(enigma.key);
+  const strikeTimer = useRef<number | null>(null);
+  const pulseTimer = useRef<number | null>(null);
 
   const [wrongAttempts, setWrongAttempts] = useState(0);
   const [hintsUsed, setHintsUsed] = useState(0);
@@ -109,6 +196,8 @@ export function EnigmaPlay({
   const [inputBad, setInputBad] = useState(false);
   const [settled, setSettled] = useState<Settled | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [strike, setStrike] = useState(false);
+  const [pulse, setPulse] = useState(false);
 
   const hints = pickList(enigma.hints);
   const nudges = pickList(enigma.nudges);
@@ -121,6 +210,19 @@ export function EnigmaPlay({
   const noteText = enigma.answerNote ? pick(enigma.answerNote) : '';
   const revealedLabel = fallbackLabel(t, 'game.revealed', 'game.reveal');
   const nudgeText = nudgeAt >= 0 ? (nudges[nudgeAt] ?? '') : '';
+  const hintsLeft = Math.max(0, maxHints - hintsUsed);
+
+  const flash = (setter: (on: boolean) => void, timer: { current: number | null }, hold: number) => {
+    if (timer.current != null) window.clearTimeout(timer.current);
+    setter(false);
+    window.requestAnimationFrame(() => {
+      setter(true);
+      timer.current = window.setTimeout(() => {
+        setter(false);
+        timer.current = null;
+      }, hold);
+    });
+  };
 
   /* 切关：清空本题的全部临时状态（语言切换不重置） */
   useEffect(() => {
@@ -131,7 +233,18 @@ export function EnigmaPlay({
     setInputBad(false);
     setSettled(null);
     setFeedback(null);
+    setStrike(false);
+    setPulse(false);
   }, [enigma.key]);
+
+  /* 清理动画计时器 */
+  useEffect(
+    () => () => {
+      if (strikeTimer.current != null) window.clearTimeout(strikeTimer.current);
+      if (pulseTimer.current != null) window.clearTimeout(pulseTimer.current);
+    },
+    []
+  );
 
   /* 综合演练切关后把焦点移到题目标题（首次挂载不抢焦点） */
   useEffect(() => {
@@ -155,6 +268,7 @@ export function EnigmaPlay({
       setValue('');
       setInputBad(false);
       setFeedback({ tone: 'ok', message: t('game.correct') });
+      flash(setPulse, pulseTimer, 760);
       onResolve({ solved: true, revealed: false, attempts: wrongAttempts, hints: hintsUsed });
       return;
     }
@@ -163,6 +277,7 @@ export function EnigmaPlay({
     setWrongAttempts(nextAttempts);
     setValue('');
     setInputBad(true);
+    flash(setStrike, strikeTimer, 200);
 
     if (nextAttempts >= MAX_ATTEMPTS) {
       setSettled({ solved: false, revealed: true });
@@ -190,15 +305,44 @@ export function EnigmaPlay({
     setFeedback({ tone: 'info', message: `${t('game.hint')} ${nextHints} / ${maxHints}` });
   };
 
+  const className = [
+    'game-player',
+    'game-player--thunder',
+    strike ? 'is-strike' : '',
+    pulse ? 'is-pulse' : '',
+    resolved ? 'is-settled' : ''
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <section className="game-player" aria-labelledby={titleId}>
+    <section className={className} aria-labelledby={titleId}>
+      <span className="game-player__edge" aria-hidden="true" />
+
       <header className="game-player__head">
         <div className="game-player__meta">
           <span className="game-player__code mono">{enigma.code}</span>
-          <span className="tag">{pick(enigma.tag)}</span>
-          <span className="game-player__attempts mono">
-            {t('game.tried')} {wrongAttempts} / {MAX_ATTEMPTS}
-          </span>
+          <span className="tag game-player__tag">{pick(enigma.tag)}</span>
+          <div className="game-player__tries">
+            <span
+              className="game-pips"
+              role="img"
+              aria-label={`${t('game.tried')} ${wrongAttempts} / ${MAX_ATTEMPTS}`}
+            >
+              {PIP_INDEXES.map((index) => (
+                <span
+                  key={index}
+                  className="game-pips__pip"
+                  data-state={
+                    index < wrongAttempts ? (index >= FREE_ATTEMPTS ? 'penalty' : 'used') : 'todo'
+                  }
+                />
+              ))}
+            </span>
+            <span className="game-player__attempts mono">
+              {t('game.tried')} {wrongAttempts} / {MAX_ATTEMPTS}
+            </span>
+          </div>
         </div>
         <HeadingTag
           ref={titleRef}
@@ -261,21 +405,20 @@ export function EnigmaPlay({
           <div className="game-tools">
             {maxHints > 0 ? (
               <button
-                className="btn btn--sm btn--ghost game-tools__hint"
+                className="btn btn--ghost game-tools__hint"
                 type="button"
                 onClick={requestHint}
                 disabled={locked || hintsUsed >= maxHints}
                 aria-expanded={hintsUsed > 0}
                 aria-controls={hintsId}
               >
-                {t('game.hint')}
+                <IcoBolt />
+                <span className="game-tools__label">{t('game.hint')}</span>
+                <span className="game-tools__remain mono" aria-hidden="true">
+                  {hintsLeft}
+                </span>
                 <span className="game-tools__cost mono">{t('game.hintCost')}</span>
               </button>
-            ) : null}
-            {maxHints > 0 ? (
-              <span className="game-tools__count mono">
-                {t('game.hint')} {hintsUsed} / {maxHints}
-              </span>
             ) : null}
           </div>
 
@@ -293,7 +436,8 @@ export function EnigmaPlay({
           <div className="game-feedback" role="status" aria-live="polite">
             {feedback ? (
               <p className={`game-feedback__message game-feedback__message--${feedback.tone}`}>
-                {feedback.message}
+                <ToneIcon tone={feedback.tone} />
+                <span className="game-feedback__text">{feedback.message}</span>
                 {feedback.penalty ? (
                   <span className="game-feedback__penalty mono">−{feedback.penalty}</span>
                 ) : null}
@@ -301,8 +445,11 @@ export function EnigmaPlay({
             ) : null}
             {nudgeText ? (
               <div className="game-nudge">
-                <span className="game-nudge__label mono">{t('game.nudge')}</span>
-                <p className="game-nudge__text">{nudgeText}</p>
+                <IcoBolt />
+                <div className="game-nudge__body">
+                  <span className="game-nudge__label mono">{t('game.nudge')}</span>
+                  <p className="game-nudge__text">{nudgeText}</p>
+                </div>
               </div>
             ) : null}
           </div>
@@ -328,19 +475,33 @@ function ResultPanel({
   hints: number;
 }) {
   const { t, pick, lang } = useLang();
+  const rank: Rank = computeRank({ solved, revealed: !solved, attempts, hints });
+  const shownScore = useCountUp(awardedScore ?? 0);
+
   return (
-    <div className={`game-result${solved ? ' is-solved' : ' is-revealed'}`}>
+    <div className={`game-result${solved ? ' is-solved' : ' is-revealed'}`} data-rank={rank}>
+      <span className="game-burst" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </span>
+
       <div className="game-result__head">
         <span className={`tag ${solved ? 'tag--ok' : 'tag--warn'}`}>
           {solved ? t('game.solved') : revealedLabel}
         </span>
         {solved && awardedScore != null ? (
-          <span className="game-result__score mono">+{awardedScore}</span>
+          <span className="game-result__score mono">+{shownScore}</span>
         ) : null}
         <span className="game-result__meta mono">
           {t('game.tried')} {attempts} / {MAX_ATTEMPTS}
         </span>
+        <div className="game-rank" data-rank={rank} aria-label={`${t('challenge.rank')} ${rank}`}>
+          <span className="game-rank__label mono">{t('challenge.rank')}</span>
+          <strong className="game-rank__letter">{rank}</strong>
+        </div>
       </div>
+
       <p className="game-result__answer">
         <span className="game-result__label mono">{t('game.answerIs')}</span>
         <strong>{answerText(enigma, lang)}</strong>

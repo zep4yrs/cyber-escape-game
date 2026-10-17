@@ -1,0 +1,38 @@
+/* ==========================================================================
+   设计令牌 v2 · 雷霆档案 THUNDER ARCHIVE
+   —— 保留雾蓝纸面与靛蓝主色，叠加电光紫 / 雷暴青 / 信号琥珀
+   ========================================================================== */
+
+:root {
+  /* ---------- 电光强调色 ---------- */
+  --volt: #8a6bff;
+  --volt-deep: #5b3df0;
+  --volt-soft: rgba(138, 107, 255, 0.14);
+  --volt-line: rgba(138, 107, 255, 0.34);
+  --thunder: #4be1ff;
+  --thunder-deep: #14b8d4;
+  --thunder-soft: rgba(75, 225, 255, 0.14);
+  --thunder-line: rgba(75, 225, 255, 0.36);
+  --flare: #ffb347;
+  --flare-soft: rgba(255, 179, 71, 0.14);
+  --flare-line: rgba(255, 179, 71, 0.38);
+
+  /* ---------- 光效与边缘 ---------- */
+  --glow-brand: 0 0 0 1px rgba(138, 107, 255, 0.22), 0 0 26px rgba(138, 107, 255, 0.22),
+    0 0 70px rgba(75, 225, 255, 0.12);
+  --glow-thunder: 0 0 0 1px rgba(75, 225, 255, 0.26), 0 0 22px rgba(75, 225, 255, 0.26),
+    0 0 54px rgba(138, 107, 255, 0.16);
+  --glow-soft: 0 0 24px rgba(75, 225, 255, 0.14);
+  --edge-grad: linear-gradient(135deg, rgba(138, 107, 255, 0.5), rgba(75, 225, 255, 0.28) 46%, transparent 78%);
+  --panel-grad: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(246, 248, 254, 0.78));
+  --card-grad: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(242, 245, 253, 0.86));
+  --hud-grad: linear-gradient(120deg, rgba(22, 26, 58, 0.9) 0%, rgba(40, 44, 104, 0.92) 52%, rgba(30, 60, 96, 0.9) 100%);
+
+  /* ---------- 动效 ---------- */
+  --ease-thunder: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-bolt: cubic-bezier(0.86, 0, 0.07, 1);
+  --dur-slow: 0.6s;
+
+  /* ---------- 纹理 ---------- */
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+}

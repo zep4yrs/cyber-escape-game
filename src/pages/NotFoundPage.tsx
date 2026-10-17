@@ -7,11 +7,15 @@ export function NotFoundPage() {
   useDocumentTitle(t('notFound.title'));
   return (
     <div className="notfound shell">
-      <p className="eyebrow">404</p>
+      <p className="notfound__code" aria-hidden="true">
+        404
+      </p>
+      <p className="eyebrow">SIGNAL LOST / 0x194</p>
       <h1>{t('notFound.title')}</h1>
       <p className="lede">{t('notFound.body')}</p>
       <Link className="btn" to="/">
         {t('common.backHome')}
+        <span aria-hidden="true">→</span>
       </Link>
     </div>
   );

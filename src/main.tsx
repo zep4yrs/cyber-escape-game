@@ -5,8 +5,10 @@ import App from './App';
 import { LangProvider } from './i18n/LangContext';
 import { ProgressProvider } from './lib/ProgressContext';
 import './styles/tokens.css';
+import './styles/thunder.css';
 import './styles/base.css';
 import './styles/app.css';
+import './styles/thunder-ui.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

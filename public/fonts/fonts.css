@@ -1,7 +1,7 @@
 /* ==========================================================================
    霞鹜文楷（LXGW WenKai）本地子集字体
    --------------------------------------------------------------------------
-   只收录本站实际用到的字符（1224 个码位），按 lxgw-wenkai-webfont@1.7.0 的
+   只收录本站实际用到的字符（1259 个码位），按 lxgw-wenkai-webfont@1.7.0 的
    unicode-range 分片挑出后放进仓库，页面因此不依赖任何外部字体 CDN。
    等宽字体只覆盖拉丁/数字/标点，中文在 --font-mono 栈里回落到正文文楷。
    新增大量中文文案后若有生僻字回落到系统字体，重新跑一遍子集脚本即可。
@@ -230,6 +230,15 @@
   font-display: swap;
   src: url('./lxgwwenkai-regular-subset-5.woff2') format('woff2');
   unicode-range: U+fee3, U+fef3, U+ff03-ff04, U+ff07, U+ff0a, U+ff17-ff19, U+ff1c-ff1d, U+ff20-ff3a, U+ff3c, U+ff3e-ff5b, U+ff5d, U+ff61-ff65, U+ff67-ff6a, U+ff6c, U+ff6f-ff78, U+ff7a-ff7d, U+ff80-ff84, U+ff86, U+ff89-ff8e, U+ff92, U+ff97-ff9b, U+ff9d-ff9f, U+ffe0-ffe4, U+ffe6, U+ffe9, U+ffeb, U+ffed, U+fffc, U+1f004, U+1f170-1f171, U+1f192-1f195, U+1f198-1f19a, U+1f1e6-1f1e8;
+}
+
+@font-face {
+  font-family: 'LXGW WenKai';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./lxgwwenkai-regular-subset-54.woff2') format('woff2');
+  unicode-range: U+73e7-73ea, U+73ee-73f0, U+73f2, U+73f4-73f5, U+73f7, U+73f9-73fa, U+73fc-73fd, U+73ff-7402, U+7404, U+7407-7408, U+740a-740f, U+7418, U+741a-741c, U+741e, U+7424-7425, U+7428-7429, U+742c-7430, U+7432, U+7435-7436, U+7438-743b, U+743e-7441, U+7443-7446, U+7448, U+744a-744b, U+7452, U+7457, U+745b, U+745d, U+7460, U+7462-7465, U+7467-746a, U+746d, U+746f, U+7471, U+7473-7474, U+7477, U+747a, U+747e, U+7481-7482, U+7484, U+7486, U+7488-748b, U+748e-748f, U+7493, U+7498, U+749a, U+749c-74a0, U+74a3, U+74a6, U+74a9-74aa, U+74ae, U+74b0-74b2, U+74b6, U+74b8-74ba, U+74bd, U+74bf, U+74c1, U+74c3, U+74c5, U+74c8, U+74ca, U+74cc, U+74cf, U+74d1-74d2, U+74d4-74d5, U+74d8-74db, U+74de-74e0, U+74e2, U+74e4-74e5, U+74e7-74e9, U+74ee;
 }
 
 @font-face {

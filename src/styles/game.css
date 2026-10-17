@@ -1,23 +1,44 @@
 /* ==========================================================================
-   实战演练 · EnigmaPlayer / ChallengeRunner 样式
+   实战演练 · 雷霆档案 THUNDER ARCHIVE
+   EnigmaPlayer / ChallengeRunner
    --------------------------------------------------------------------------
-   学习界面风格：纸白卡片 + 柔和圆角 + 品牌靛蓝强调；
-   颜色 / 字体 / 间距 / 圆角全部使用 tokens.css 变量，不写死色值。
-   旧版题面 HTML 的类名（.data-block/.data-table/.note/.warn/.code/.kv/…）
-   在这里重新给出「学习界面」的外观，避免重做数据文件。
+   视觉：深色玻璃 HUD（--hud-grad）+ 电光描边（--edge-grad/--glow-thunder）
+        + 电压紫（--volt）/ 雷暴青（--thunder）/ 信号琥珀（--flare）
+   可读性：题面/解析仍是浅色纸面 + 深色文字；深色只用于 HUD 与暂停层。
+   颜色/字体/圆角/动效全部使用 tokens.css + thunder.css 变量。
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
    1. 单关卡片（EnigmaPlayer / EnigmaPlay）
    -------------------------------------------------------------------------- */
 .game-player {
+  position: relative;
   display: grid;
   gap: 18px;
   padding: clamp(18px, 2.6vw, 28px);
-  background: var(--surface);
+  background: var(--card-grad);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-1);
+}
+
+/* 电光描边（渐变 1px 边框，低透明度，不压文字） */
+.game-player__edge,
+.game-hud__edge,
+.game-end__edge,
+.game-modal__edge {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--edge-grad);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .game-player__head {
@@ -39,11 +60,47 @@
   color: var(--brand-deep);
 }
 
-.game-player__attempts {
+.game-player__tag {
+  background: var(--volt-soft);
+  color: var(--volt-deep);
+}
+
+.game-player__tries {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   margin-left: auto;
+}
+
+.game-player__attempts {
   color: var(--ink-44);
   font-size: 11px;
   white-space: nowrap;
+}
+
+/* 尝试次数 pips：5 格，前 2 格免罚、后 3 格惩罚 */
+.game-pips {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.game-pips__pip {
+  width: 16px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  transition: background var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.game-pips__pip[data-state='used'] {
+  background: var(--thunder-soft);
+  box-shadow: inset 0 0 0 1px var(--thunder-line), 0 0 8px var(--thunder-soft);
+}
+
+.game-pips__pip[data-state='penalty'] {
+  background: var(--flare);
+  box-shadow: inset 0 0 0 1px var(--flare-line), 0 0 10px var(--flare-soft);
 }
 
 .game-player__title {
@@ -54,7 +111,7 @@
 }
 
 .game-player__title:focus-visible {
-  outline: 2px solid var(--brand);
+  outline: 2px solid var(--thunder);
   outline-offset: 5px;
   border-radius: var(--r-sm);
 }
@@ -66,8 +123,46 @@
   line-height: 1.85;
 }
 
+/* 答错 shake（≤180ms）/ 答对 pulse + 光晕；reduced-motion 在文末关闭 */
+.game-player.is-strike .game-answer__row,
+.game-player.is-strike .game-feedback__message {
+  animation: gp-shake 180ms var(--ease-bolt);
+}
+
+.game-player.is-pulse {
+  animation: gp-card-pulse 620ms var(--ease-thunder);
+}
+
+@keyframes gp-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  22% {
+    transform: translateX(-3px);
+  }
+  48% {
+    transform: translateX(3px);
+  }
+  74% {
+    transform: translateX(-2px);
+  }
+}
+
+@keyframes gp-card-pulse {
+  0% {
+    box-shadow: var(--shadow-1);
+  }
+  35% {
+    box-shadow: var(--shadow-2), var(--glow-thunder);
+  }
+  100% {
+    box-shadow: var(--shadow-1);
+  }
+}
+
 /* --------------------------------------------------------------------------
-   2. 题面内容（来自 legacy 数据的三语 HTML）
+   2. 题面内容（来自 legacy 数据的三语 HTML，保持浅色可读）
    -------------------------------------------------------------------------- */
 .game-content {
   color: var(--ink-70);
@@ -117,7 +212,6 @@
   color: var(--brand);
 }
 
-/* 被截获的数据 / 通信面板 */
 .game-content .data-block {
   margin: 16px 0;
   padding: 14px 16px;
@@ -145,7 +239,6 @@
   color: var(--brand-deep);
 }
 
-/* 数据表 */
 .game-content .data-table {
   width: 100%;
   margin: 16px 0;
@@ -182,7 +275,6 @@
   white-space: nowrap;
 }
 
-/* 说明 / 风险提示 */
 .game-content .note,
 .game-content .warn {
   margin: 16px 0;
@@ -211,7 +303,6 @@
   color: var(--warn);
 }
 
-/* 代码 / 密文块 */
 .game-content pre.code,
 .game-content .code {
   margin: 16px 0;
@@ -229,7 +320,6 @@
   overflow-x: auto;
 }
 
-/* 键值账页 */
 .game-content .kv {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
@@ -251,7 +341,6 @@
   color: var(--ink-82);
 }
 
-/* 二维码碎片等并排块 */
 .game-content .fragments {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -272,7 +361,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   3. 答题区
+   3. 答题区 / 提示芯片
    -------------------------------------------------------------------------- */
 .game-answer {
   display: grid;
@@ -297,6 +386,12 @@
 
 .game-answer__submit {
   flex: none;
+  background: linear-gradient(120deg, var(--brand-deep), var(--volt-deep) 58%, var(--thunder-deep));
+  border-color: transparent;
+}
+
+.game-answer__submit:hover {
+  background: linear-gradient(120deg, var(--brand), var(--volt) 58%, var(--thunder-deep));
 }
 
 .game-answer__note {
@@ -306,7 +401,6 @@
   line-height: 1.7;
 }
 
-/* 提示与计数 */
 .game-tools {
   display: flex;
   align-items: center;
@@ -314,20 +408,45 @@
   flex-wrap: wrap;
 }
 
+/* 提示按钮：图标 + 剩余次数 + 消耗 */
 .game-tools__hint {
   gap: 8px;
+  border-color: var(--thunder-line);
+  background: linear-gradient(120deg, var(--surface), var(--thunder-soft));
+  color: var(--ink-82);
+}
+
+.game-tools__hint:hover:not(:disabled) {
+  border-color: var(--thunder);
+  color: var(--brand-deep);
+  box-shadow: var(--glow-soft);
+}
+
+.game-tools__hint .game-ico {
+  color: var(--thunder-deep);
+}
+
+.game-tools__label {
+  font-weight: 600;
+}
+
+.game-tools__remain {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--volt-soft);
+  color: var(--volt-deep);
+  font-size: 11px;
+  letter-spacing: 0;
 }
 
 .game-tools__cost {
   font-size: 10.5px;
   color: var(--warn);
   letter-spacing: 0.04em;
-}
-
-.game-tools__count {
-  color: var(--ink-44);
-  font-size: 11px;
-  letter-spacing: 0.08em;
 }
 
 /* 提示列表 */
@@ -344,20 +463,34 @@
   grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
   padding: 11px 14px;
-  border-left: 3px solid var(--brand-line);
+  border-left: 3px solid var(--thunder-line);
   border-radius: 0 var(--r-md) var(--r-md) 0;
-  background: var(--brand-wash);
+  background: linear-gradient(90deg, var(--thunder-soft), var(--brand-wash));
   font-size: 14.5px;
   line-height: 1.8;
   color: var(--ink-70);
+  animation: gp-hint-in 260ms var(--ease-out) both;
 }
 
 .game-hint__num {
-  color: var(--brand);
+  color: var(--thunder-deep);
   padding-top: 2px;
 }
 
-/* 反馈区（role=status，常驻以保证读屏能播报更新） */
+@keyframes gp-hint-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. 反馈 / 方向提示芯片（左侧电流条 + 图标）
+   -------------------------------------------------------------------------- */
 .game-feedback {
   display: grid;
   gap: 10px;
@@ -368,50 +501,103 @@
 }
 
 .game-feedback__message {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
   margin: 0;
-  padding: 11px 14px;
+  padding: 11px 14px 11px 38px;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--brand-line);
   border-radius: var(--r-md);
   background: var(--surface-2);
   font-size: 14.5px;
   line-height: 1.7;
   color: var(--ink-80);
+  overflow: hidden;
+}
+
+.game-feedback__message::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--volt), var(--thunder));
+  box-shadow: 0 0 12px var(--thunder-soft);
+}
+
+.game-ico {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  flex: none;
 }
 
 .game-feedback__message--ok {
-  border-left-color: var(--ok-line);
+  border-color: var(--ok-line);
   background: var(--ok-soft);
   color: var(--ok);
 }
 
+.game-feedback__message--ok::before {
+  background: linear-gradient(180deg, var(--ok), var(--thunder));
+}
+
 .game-feedback__message--bad {
-  border-left-color: var(--alert-line);
+  border-color: var(--alert-line);
   background: var(--alert-soft);
   color: var(--ink);
 }
 
+.game-feedback__message--bad::before {
+  background: linear-gradient(180deg, var(--alert), var(--flare));
+  box-shadow: 0 0 12px var(--alert-soft);
+}
+
+.game-feedback__message--info {
+  border-color: var(--thunder-line);
+  background: var(--thunder-soft);
+  color: var(--ink-82);
+}
+
+.game-feedback__text {
+  min-width: 0;
+}
+
 .game-feedback__penalty {
+  margin-left: auto;
   color: var(--warn);
   font-size: 11px;
 }
 
-/* 方向提示（nudge） */
+/* 方向提示 nudge */
 .game-nudge {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
   padding: 12px 15px;
-  border: 1px dashed var(--brand-line);
+  border: 1px dashed var(--flare-line);
   border-radius: var(--r-md);
-  background: var(--brand-wash);
+  background: linear-gradient(120deg, var(--flare-soft), var(--surface-2));
+}
+
+.game-nudge .game-ico {
+  position: static;
+  transform: none;
+  color: var(--warn);
+  margin-top: 2px;
 }
 
 .game-nudge__label {
   display: block;
   margin-bottom: 4px;
-  color: var(--brand-deep);
+  color: var(--warn);
   font-size: 10.5px;
   letter-spacing: 0.1em;
 }
@@ -424,25 +610,87 @@
 }
 
 /* --------------------------------------------------------------------------
-   4. 结算 / 解析
+   5. 结算面板 + 评级 + 电光爆点
    -------------------------------------------------------------------------- */
 .game-result {
+  position: relative;
   display: grid;
   gap: 14px;
   padding: clamp(14px, 2vw, 20px);
-  border: 1px solid var(--line);
+  border: 1px solid var(--thunder-line);
   border-radius: var(--r-md);
-  background: var(--surface-2);
+  background: var(--panel-grad);
+  box-shadow: var(--glow-soft);
+  overflow: hidden;
 }
 
 .game-result.is-solved {
-  border-color: var(--ok-line);
-  background: var(--ok-soft);
+  border-color: var(--thunder-line);
+  background: linear-gradient(155deg, var(--surface), var(--thunder-soft) 70%, var(--ok-soft));
 }
 
 .game-result.is-revealed {
-  border-color: var(--warn-line);
-  background: var(--warn-soft);
+  border-color: var(--flare-line);
+  background: linear-gradient(155deg, var(--surface), var(--flare-soft));
+  box-shadow: none;
+}
+
+/* 电光爆点：三道低透明度电弧，随结算播放一次 */
+.game-burst {
+  position: absolute;
+  right: -28px;
+  top: -34px;
+  width: 220px;
+  height: 180px;
+  pointer-events: none;
+  opacity: 0;
+  animation: gp-burst 900ms var(--ease-bolt) 80ms both;
+}
+
+.game-burst i {
+  position: absolute;
+  display: block;
+  width: 2px;
+  height: 120px;
+  background: linear-gradient(180deg, transparent, var(--thunder), var(--volt), transparent);
+  transform-origin: top center;
+  filter: drop-shadow(0 0 6px var(--thunder-soft));
+}
+
+.game-burst i:nth-child(1) {
+  left: 50%;
+  transform: rotate(24deg);
+}
+
+.game-burst i:nth-child(2) {
+  left: 58%;
+  height: 96px;
+  transform: rotate(48deg);
+  opacity: 0.7;
+}
+
+.game-burst i:nth-child(3) {
+  left: 42%;
+  height: 80px;
+  transform: rotate(4deg);
+  opacity: 0.55;
+}
+
+@keyframes gp-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  18% {
+    opacity: 0.9;
+  }
+  45% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.15);
+  }
 }
 
 .game-result__head {
@@ -455,8 +703,9 @@
 .game-result__score {
   color: var(--ok);
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 16px;
   letter-spacing: 0.06em;
+  text-shadow: 0 0 14px var(--thunder-soft);
 }
 
 .game-result__meta {
@@ -505,8 +754,77 @@
   font-size: 12.5px;
 }
 
+/* 评级徽章 */
+.game-rank {
+  display: inline-grid;
+  justify-items: center;
+  gap: 1px;
+  min-width: 52px;
+  padding: 5px 10px 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.game-rank__label {
+  color: var(--ink-44);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+}
+
+.game-rank__letter {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.game-rank[data-rank='S'] {
+  border-color: var(--volt-line);
+  background: linear-gradient(150deg, var(--surface), var(--volt-soft));
+  box-shadow: 0 0 18px var(--volt-soft);
+}
+
+.game-rank[data-rank='S'] .game-rank__letter {
+  color: var(--volt-deep);
+  text-shadow: 0 0 14px var(--thunder-soft);
+}
+
+.game-rank[data-rank='A'] {
+  border-color: var(--thunder-line);
+  background: linear-gradient(150deg, var(--surface), var(--thunder-soft));
+}
+
+.game-rank[data-rank='A'] .game-rank__letter {
+  color: var(--thunder-deep);
+}
+
+.game-rank[data-rank='B'] {
+  border-color: var(--flare-line);
+  background: linear-gradient(150deg, var(--surface), var(--flare-soft));
+}
+
+.game-rank[data-rank='B'] .game-rank__letter {
+  color: var(--warn);
+}
+
+.game-rank[data-rank='C'] .game-rank__letter {
+  color: var(--ink-44);
+}
+
+.game-rank--end {
+  min-width: 76px;
+  padding: 8px 14px 10px;
+}
+
+.game-rank--end .game-rank__letter {
+  font-size: 38px;
+}
+
 /* --------------------------------------------------------------------------
-   5. 综合演练：HUD / 进度 / 暂停
+   6. 综合演练：深色玻璃 HUD
    -------------------------------------------------------------------------- */
 .game-run {
   display: grid;
@@ -514,20 +832,44 @@
   margin-top: 8px;
 }
 
-.game-hud {
+.game-run--thunder {
+  position: relative;
+}
+
+.game-hud--thunder {
   position: sticky;
-  top: calc(var(--head-h) + 8px);
+  top: calc(var(--head-h) + 10px);
   z-index: 20;
   display: flex;
   align-items: center;
-  gap: clamp(16px, 2.6vw, 40px);
+  gap: clamp(16px, 2.6vw, 42px);
   flex-wrap: wrap;
-  padding: 12px 18px;
-  border: 1px solid var(--line);
+  padding: 13px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--r-lg);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-1);
+  background: var(--hud-grad);
+  box-shadow: var(--shadow-2), var(--glow-soft);
+  color: rgba(255, 255, 255, 0.92);
+  isolation: isolate;
+}
+
+.game-hud--thunder::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--noise);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.game-hud--thunder > * {
+  position: relative;
+  z-index: 1;
+}
+
+.game-hud__edge {
+  opacity: 0.7;
 }
 
 .game-hud__stat {
@@ -537,13 +879,13 @@
 }
 
 .game-hud__stat--stage {
-  flex: 1 1 200px;
+  flex: 1 1 220px;
 }
 
 .game-hud__label {
-  color: var(--ink-44);
+  color: rgba(255, 255, 255, 0.62);
   font-size: 10.5px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   line-height: 1.5;
 }
 
@@ -553,51 +895,145 @@
   line-height: 1.15;
   letter-spacing: 0.03em;
   font-variant-numeric: tabular-nums;
-  color: var(--ink);
+  color: #fff;
+}
+
+.game-hud__value.game-clock {
+  font-size: clamp(24px, 2.8vw, 34px);
+  text-shadow: 0 0 18px var(--thunder-soft);
+}
+
+.game-hud__score {
+  text-shadow: 0 0 16px var(--volt-soft);
 }
 
 .game-clock[data-tone='warn'] {
-  color: var(--warn);
+  color: var(--flare);
+  text-shadow: 0 0 18px var(--flare-soft);
+  animation: hud-warn-pulse 2s var(--ease-inout) infinite;
 }
 
 .game-clock[data-tone='alert'] {
-  color: var(--alert);
+  color: var(--surface);
+  text-shadow: 0 0 16px var(--alert-line), 0 0 34px var(--alert-line);
+  animation: hud-alert-pulse 0.9s steps(2, end) infinite;
 }
 
-.game-hud__pause {
-  margin-left: auto;
-  flex: none;
+.game-hud--thunder[data-tone='warn'] {
+  box-shadow: var(--shadow-2), 0 0 0 1px var(--flare-line), 0 0 26px var(--flare-soft);
 }
 
-/* 六段进度 */
+.game-hud--thunder[data-tone='alert'] {
+  box-shadow: var(--shadow-2), 0 0 0 1px var(--alert-line), 0 0 30px var(--alert-soft);
+}
+
+@keyframes hud-warn-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+@keyframes hud-alert-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* 六段进度：当前段电光呼吸 */
 .game-progress {
   display: flex;
   gap: 4px;
-  margin-top: 6px;
+  margin-top: 7px;
 }
 
 .game-progress__seg {
   flex: 1 1 0;
   height: 6px;
   border-radius: 2px;
-  background: var(--surface-3);
-  box-shadow: inset 0 0 0 1px var(--line-soft);
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: background var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
 }
 
 .game-progress__seg[data-state='current'] {
-  background: var(--brand-soft);
-  box-shadow: inset 0 0 0 1px var(--brand-line);
+  background: linear-gradient(90deg, var(--volt), var(--thunder));
+  box-shadow: 0 0 10px var(--thunder-soft);
+  animation: seg-charge 1.8s var(--ease-inout) infinite;
 }
 
 .game-progress__seg[data-state='done'] {
-  background: var(--brand);
+  background: linear-gradient(90deg, var(--volt-deep), var(--thunder-deep));
 }
 
 .game-progress__seg[data-result='revealed'] {
-  background: var(--warn-line);
+  background: var(--flare);
+  box-shadow: 0 0 8px var(--flare-soft);
 }
 
-/* 暂停弹层 */
+@keyframes seg-charge {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* HUD 暂停按钮 */
+.game-hud__pause {
+  flex: none;
+  margin-left: auto;
+  gap: 8px;
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.game-hud__pause:hover:not(:disabled) {
+  border-color: var(--thunder-line);
+  background: var(--thunder-soft);
+  color: #fff;
+  box-shadow: var(--glow-soft);
+}
+
+.game-hud__pause-ico {
+  position: relative;
+  width: 10px;
+  height: 12px;
+  flex: none;
+}
+
+.game-hud__pause-ico::before,
+.game-hud__pause-ico::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.game-hud__pause-ico::before {
+  left: 0;
+}
+
+.game-hud__pause-ico::after {
+  right: 0;
+}
+
+/* --------------------------------------------------------------------------
+   7. 暂停弹层（深色玻璃）
+   -------------------------------------------------------------------------- */
 .game-modal {
   position: fixed;
   inset: 0;
@@ -605,50 +1041,86 @@
   display: grid;
   place-items: center;
   padding: clamp(16px, 4vw, 32px);
-  background: rgba(22, 26, 58, 0.36);
-  backdrop-filter: blur(4px);
+  background: rgba(12, 15, 36, 0.58);
+  backdrop-filter: blur(6px);
+}
+
+.game-modal--thunder {
+  animation: gp-fade-in 200ms var(--ease-out) both;
 }
 
 .game-modal__panel {
+  position: relative;
   display: grid;
   gap: 14px;
   justify-items: start;
-  width: min(440px, 100%);
-  padding: clamp(20px, 3vw, 30px);
-  border: 1px solid var(--line-strong);
+  width: min(460px, 100%);
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--r-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-2);
+  background: var(--hud-grad);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-2), var(--glow-thunder);
+  overflow: hidden;
+}
+
+.game-modal__edge {
+  opacity: 0.85;
 }
 
 .game-modal__title {
   margin: 0;
+  color: #fff;
   font-size: var(--t-h2);
 }
 
 .game-modal__text {
   margin: 0;
-  color: var(--ink-70);
+  color: rgba(255, 255, 255, 0.68);
   font-size: var(--t-small);
   line-height: 1.85;
 }
 
+.game-modal__panel .btn {
+  background: linear-gradient(120deg, var(--brand-deep), var(--volt-deep) 60%, var(--thunder-deep));
+  border-color: transparent;
+  color: #fff;
+}
+
+@keyframes gp-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* --------------------------------------------------------------------------
-   6. 综合演练结束屏
+   8. 综合演练结算屏
    -------------------------------------------------------------------------- */
 .game-end {
+  position: relative;
   display: grid;
   gap: 22px;
   padding: clamp(20px, 3vw, 32px);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+  background: var(--card-grad);
+  box-shadow: var(--shadow-1), var(--glow-soft);
+  overflow: hidden;
 }
 
 .game-end__head {
   display: grid;
   gap: 8px;
+}
+
+.game-end__headrow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .game-end__title {
@@ -657,7 +1129,7 @@
 }
 
 .game-end__title:focus-visible {
-  outline: 2px solid var(--brand);
+  outline: 2px solid var(--thunder);
   outline-offset: 5px;
   border-radius: var(--r-sm);
 }
@@ -696,6 +1168,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.game-stat__value--score {
+  color: var(--volt-deep);
+  text-shadow: 0 0 18px var(--thunder-soft);
+}
+
 .game-end__results {
   display: grid;
   gap: 10px;
@@ -716,7 +1193,7 @@
 
 .game-end__row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
   align-items: center;
   gap: 14px;
   padding: 11px 4px;
@@ -727,6 +1204,21 @@
 
 .game-end__row:last-child {
   border-bottom: 1px solid var(--line-soft);
+}
+
+.game-end__row--in {
+  animation: ge-row-in 420ms var(--ease-out) both;
+}
+
+@keyframes ge-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .game-end__code {
@@ -743,6 +1235,39 @@
   color: var(--ink);
 }
 
+.game-end__rank {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-44);
+  background: var(--surface);
+}
+
+.game-end__rank[data-rank='S'] {
+  border-color: var(--volt-line);
+  color: var(--volt-deep);
+  box-shadow: 0 0 12px var(--volt-soft);
+}
+
+.game-end__rank[data-rank='A'] {
+  border-color: var(--thunder-line);
+  color: var(--thunder-deep);
+}
+
+.game-end__rank[data-rank='B'] {
+  border-color: var(--flare-line);
+  color: var(--warn);
+}
+
+.game-end__rank[data-rank='C'] {
+  color: var(--ink-44);
+}
+
 .game-end__score {
   font-size: 12px;
   color: var(--ink-62);
@@ -754,12 +1279,41 @@
   color: var(--ok);
 }
 
+/* 再来一次：扫光按钮 */
 .game-end__again {
   justify-self: start;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(120deg, var(--brand-deep), var(--volt-deep) 55%, var(--thunder-deep));
+  border-color: transparent;
+}
+
+.game-sweep::after {
+  content: '';
+  position: absolute;
+  top: -40%;
+  bottom: -40%;
+  left: -30%;
+  width: 26%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: skewX(-18deg);
+  animation: gp-sweep 2.8s var(--ease-inout) infinite;
+  pointer-events: none;
+}
+
+@keyframes gp-sweep {
+  0%,
+  55% {
+    left: -35%;
+  }
+  85%,
+  100% {
+    left: 120%;
+  }
 }
 
 /* --------------------------------------------------------------------------
-   7. 响应式（390px 起）
+   9. 响应式（390px 起，不溢出）
    -------------------------------------------------------------------------- */
 @media (max-width: 760px) {
   .game-player {
@@ -767,7 +1321,7 @@
     gap: 14px;
   }
 
-  .game-player__attempts {
+  .game-player__tries {
     margin-left: 0;
   }
 
@@ -775,10 +1329,10 @@
     width: 100%;
   }
 
-  .game-hud {
+  .game-hud--thunder {
     top: calc(var(--head-h) + 6px);
     gap: 10px 18px;
-    padding: 10px 14px;
+    padding: 11px 15px;
   }
 
   .game-hud__stat--stage {
@@ -788,6 +1342,10 @@
 
   .game-hud__pause {
     margin-left: auto;
+  }
+
+  .game-hud__value.game-clock {
+    font-size: 26px;
   }
 
   .game-end__stats {
@@ -805,8 +1363,15 @@
     min-width: 44px;
   }
 
+  .game-end__rank {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+  }
+
   .game-end__row .tag {
-    grid-column: 2 / -1;
+    grid-column: 2;
+    grid-row: 2;
     justify-self: start;
   }
 }
@@ -828,12 +1393,42 @@
   .game-end__name {
     white-space: normal;
   }
+
+  .game-rank--end {
+    min-width: 64px;
+  }
+
+  .game-rank--end .game-rank__letter {
+    font-size: 32px;
+  }
 }
 
-/* 减弱动效：保持即时反馈，不做额外动画（base.css 已全局降级） */
+/* --------------------------------------------------------------------------
+   10. 减弱动效：全量降级（电光/扫光/震动/脉冲/爆点全部关闭）
+   -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  .game-progress__seg,
-  .game-hud {
+  .game-player.is-strike .game-answer__row,
+  .game-player.is-strike .game-feedback__message,
+  .game-player.is-pulse,
+  .game-hint,
+  .game-burst,
+  .game-burst i,
+  .game-clock[data-tone='warn'],
+  .game-clock[data-tone='alert'],
+  .game-progress__seg[data-state='current'],
+  .game-end__row--in,
+  .game-sweep::after,
+  .game-modal--thunder {
+    animation: none !important;
+  }
+
+  .game-burst,
+  .game-sweep::after {
+    display: none;
+  }
+
+  .game-pips__pip,
+  .game-progress__seg {
     transition: none;
   }
 }

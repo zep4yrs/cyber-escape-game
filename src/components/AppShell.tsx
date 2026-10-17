@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import { useLang } from '../i18n/LangContext';
 import { LangSwitch } from './LangSwitch';
 import { BrandMark } from './BrandMark';
+import { Atmosphere } from './fx/Atmosphere';
+import { BootIntro } from './fx/BootIntro';
 
 const navItems = [
   { to: '/', key: 'nav.path', end: true },
@@ -17,6 +19,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <>
+      <Atmosphere />
+      <BootIntro />
       <a className="skip-link" href="#main">
         {t('a11y.skip')}
       </a>
@@ -41,6 +45,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               </NavLink>
             ))}
           </nav>
+          <span className="ops-chip" aria-hidden="true">
+            <span className="ops-dot" />
+            OPS-ONLINE
+          </span>
           <LangSwitch />
         </div>
         {!isHome ? <div className="topbar__rule" /> : null}
@@ -63,8 +71,18 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
           <p className="footer__meta mono">{t('footer.resetHint')}</p>
         </div>
+        <div className="shell footer__telemetry" aria-hidden="true">
+          <span>
+            <i /> SECURE CHANNEL
+          </span>
+          <span>OP-2026 · LEARNING ARCHIVE</span>
+          <span>REACT 19 / VITE</span>
+          <span>ZH · EN · FR</span>
+          <span>LOCAL-FIRST PROGRESS</span>
+        </div>
         <div className="shell footer__bottom">
           <span className="mono">OP-2026 · LEARNING PATH</span>
+          <span className="mono">THUNDER ARCHIVE // v2</span>
         </div>
       </footer>
     </>

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useLang } from '../i18n/LangContext';
 import { useProgress } from '../lib/ProgressContext';
 import { MODULES, getModule } from '../content/modules';
@@ -23,20 +23,28 @@ function ModuleContent() {
   const { moduleId } = useParams();
   const module = getModule(moduleId)!;
   const { t, pick } = useLang();
+  const navigate = useNavigate();
   const { moduleProgress, isLessonDone, markLessonDone, recordQuiz, recordGame, setLastVisited } =
     useProgress();
   const progress = moduleProgress(module);
   useDocumentTitle(pick(module.title));
-  const [activeId, setActiveId] = useState<string | undefined>(module.lessons[0]?.id);
 
+  const [activeId, setActiveId] = useState<string | undefined>(module.lessons[0]?.id);
+  const [focusMode, setFocusMode] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [readPct, setReadPct] = useState(0);
+  const [showComplete, setShowComplete] = useState(false);
+  const wasCompleted = useRef(progress.completed);
+
+  /* 进入模块时记录续学位置 */
   useEffect(() => {
     const initial =
       module.lessons.find((lesson) => !isLessonDone(module.id, lesson.id)) ?? module.lessons[0];
     setLastVisited(module.id, initial?.id ?? '');
-    // 只在进入模块时记录一次
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [module.id]);
 
+  /* 滚动高亮当前课 */
   useEffect(() => {
     const sections = module.lessons
       .map((lesson) => document.getElementById(`lesson-${lesson.id}`))
@@ -55,17 +63,92 @@ function ModuleContent() {
     return () => observer.disconnect();
   }, [module.id, module.lessons]);
 
+  /* 阅读进度条 */
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const doc = document.documentElement;
+        const max = doc.scrollHeight - window.innerHeight;
+        setReadPct(max > 0 ? Math.min(100, Math.round((window.scrollY / max) * 100)) : 0);
+      });
+    };
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  /* 专注模式 */
+  useEffect(() => {
+    document.body.classList.toggle('is-focus', focusMode);
+    return () => document.body.classList.remove('is-focus');
+  }, [focusMode]);
+
+  /* 快捷键：F 专注 / ? 快捷键 / Esc 退出 */
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing =
+        target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      if (event.key === 'Escape') {
+        if (shortcutsOpen) {
+          setShortcutsOpen(false);
+          event.preventDefault();
+          return;
+        }
+        if (focusMode) {
+          setFocusMode(false);
+          event.preventDefault();
+        }
+        return;
+      }
+      if (typing) return;
+      if (event.key === 'f' || event.key === 'F') {
+        setFocusMode((value) => !value);
+        event.preventDefault();
+      } else if (event.key === '?') {
+        setShortcutsOpen((value) => !value);
+        event.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [focusMode, shortcutsOpen]);
+
+  /* 模块完成横幅：只在「未完成 → 完成」时出现一次 */
+  useEffect(() => {
+    if (progress.completed && !wasCompleted.current) {
+      setShowComplete(true);
+      const timer = window.setTimeout(() => setShowComplete(false), 8000);
+      wasCompleted.current = true;
+      return () => window.clearTimeout(timer);
+    }
+    if (!progress.completed) wasCompleted.current = false;
+  }, [progress.completed]);
+
   const index = MODULES.findIndex((item) => item.id === module.id);
   const prevModule = index > 0 ? MODULES[index - 1] : undefined;
   const nextModule = index < MODULES.length - 1 ? MODULES[index + 1] : undefined;
 
   return (
-    <article className="modulepage">
+    <article className={`modulepage${focusMode ? ' modulepage--focus' : ''}`}>
+      <div className="readbar" aria-hidden="true">
+        <span className="readbar__fill" style={{ width: `${readPct}%` }} />
+      </div>
+
       <div className="shell">
         <nav className="crumbs" aria-label={t('common.backHome')}>
           <Link to="/">{t('common.backHome')}</Link>
           <span aria-hidden="true">/</span>
           <span className="mono">{module.code}</span>
+          <span className="mono crumbs__pct">{readPct}%</span>
         </nav>
 
         <header className="modulehead">
@@ -98,6 +181,28 @@ function ModuleContent() {
             <div className="bar bar--head" aria-hidden="true">
               <span className="bar__fill" style={{ width: `${progress.percent}%` }} />
             </div>
+
+            <div className="modulehead__toolbar">
+              <button
+                type="button"
+                className="tool-btn"
+                aria-pressed={focusMode}
+                onClick={() => setFocusMode((value) => !value)}
+              >
+                <span aria-hidden="true">{focusMode ? '◱' : '◰'}</span>
+                {focusMode ? t('ui.exitFocus') : t('ui.focus')}
+                <kbd>F</kbd>
+              </button>
+              <button
+                type="button"
+                className="tool-btn tool-btn--shortcuts"
+                onClick={() => setShortcutsOpen(true)}
+              >
+                <span aria-hidden="true">⌘</span>
+                {t('ui.shortcuts')}
+                <kbd>?</kbd>
+              </button>
+            </div>
           </div>
 
           <aside className="outcomes card" aria-labelledby="outcomes-title">
@@ -116,6 +221,26 @@ function ModuleContent() {
             </ul>
           </aside>
         </header>
+
+        {showComplete ? (
+          <section className="complete-banner" role="status" aria-live="polite">
+            <span className="complete-banner__icon" aria-hidden="true">
+              <ModuleIcon icon={module.icon} size={24} />
+            </span>
+            <div>
+              <p className="complete-banner__title">{t('module.completeTitle')}</p>
+              <p className="complete-banner__body">{t('module.completeBody')}</p>
+            </div>
+            <button
+              type="button"
+              className="btn btn--sm"
+              onClick={() => navigate(nextModule ? `/modules/${nextModule.id}` : '/challenge')}
+            >
+              {nextModule ? pick(nextModule.title) : t('challenge.title')}
+              <span aria-hidden="true">→</span>
+            </button>
+          </section>
+        ) : null}
 
         <div className="modulegrid">
           <nav className="toc" aria-label={t('module.contents')}>
@@ -197,6 +322,51 @@ function ModuleContent() {
           </div>
         </div>
       </div>
+
+      <button
+        type="button"
+        className="focus-fab"
+        aria-pressed={focusMode}
+        onClick={() => setFocusMode((value) => !value)}
+      >
+        <span aria-hidden="true">{focusMode ? '◱' : '◰'}</span>
+        {focusMode ? t('ui.exitFocus') : t('ui.focus')}
+      </button>
+
+      {shortcutsOpen ? (
+        <div
+          className="scut-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="scut-title"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setShortcutsOpen(false);
+          }}
+        >
+          <div className="scut-panel">
+            <h2 className="scut-panel__title" id="scut-title">
+              {t('ui.shortcuts')}
+            </h2>
+            <div className="scut-list">
+              <div className="shortcut">
+                <span>{t('ui.focus')}</span>
+                <kbd>F</kbd>
+              </div>
+              <div className="shortcut">
+                <span>{t('ui.shortcuts')}</span>
+                <kbd>?</kbd>
+              </div>
+              <div className="shortcut">
+                <span>{t('ui.exitFocus')}</span>
+                <kbd>Esc</kbd>
+              </div>
+            </div>
+            <button type="button" className="btn btn--sm" onClick={() => setShortcutsOpen(false)} autoFocus>
+              {t('common.close')}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </article>
   );
 }
