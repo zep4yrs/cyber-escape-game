@@ -86,7 +86,7 @@ for css_name, points in jobs:
         }
     print(css_name, "blocks:", total, "needed:", hit)
 
-out_dir = repo / "assets" / "fonts"
+out_dir = repo / "public" / "fonts"
 if out_dir.exists():
     shutil.rmtree(out_dir)
 out_dir.mkdir(parents=True)
@@ -121,5 +121,5 @@ header = (
     "   新增大量中文文案后若有生僻字回落到系统字体，重新跑一遍子集脚本即可。\n"
     "   ========================================================================== */\n\n"
 ) % len(chars)
-(repo / "css" / "fonts.css").write_text(header + "\n".join(blocks), encoding="utf-8")
+(out_dir / "fonts.css").write_text(header + "\n".join(blocks), encoding="utf-8")
 print("files:", len(blocks), "bytes:", total_bytes)

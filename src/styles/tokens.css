@@ -1,0 +1,91 @@
+/* ==========================================================================
+   数字封锁行动 · 学习路径
+   设计令牌：保留 work.feng-qiao.top 的雾蓝配色，排版与组件为「专注学习」重做
+   ========================================================================== */
+
+:root {
+  /* ---------- 纸面 ---------- */
+  --bg: #f2f5fd;
+  --bg-deep: #e7edfa;
+  --surface: #ffffff;
+  --surface-2: #f7f9fe;
+  --surface-3: #eaeffb;
+
+  /* ---------- 墨色（对比度按 WCAG AA 校准） ---------- */
+  --ink: #161a3a;
+  --ink-82: rgba(22, 26, 58, 0.84);
+  --ink-70: rgba(22, 26, 58, 0.76);
+  --ink-62: rgba(22, 26, 58, 0.72);
+  --ink-44: rgba(22, 26, 58, 0.63);
+  --ink-28: rgba(22, 26, 58, 0.34);
+
+  /* ---------- 细线 ---------- */
+  --line: rgba(38, 47, 110, 0.16);
+  --line-soft: rgba(38, 47, 110, 0.085);
+  --line-strong: rgba(38, 47, 110, 0.3);
+
+  /* ---------- 品牌 ---------- */
+  --brand: #4a4ee0;
+  --brand-deep: #3336b8;
+  --brand-bright: #6a63f2;
+  --brand-soft: rgba(74, 78, 224, 0.12);
+  --brand-wash: rgba(74, 78, 224, 0.06);
+  --brand-line: rgba(74, 78, 224, 0.32);
+
+  /* ---------- 语义色（AA 校准） ---------- */
+  --ok: #1f6b48;
+  --ok-soft: rgba(31, 107, 72, 0.09);
+  --ok-line: rgba(31, 107, 72, 0.32);
+  --warn: #7c5310;
+  --warn-soft: rgba(124, 83, 16, 0.09);
+  --warn-line: rgba(124, 83, 16, 0.32);
+  --alert: #a8324a;
+  --alert-soft: rgba(168, 50, 74, 0.08);
+  --alert-line: rgba(168, 50, 74, 0.34);
+  --hold: #5c6484;
+
+  /* ---------- 氛围光晕 ---------- */
+  --haze-blue: rgba(92, 128, 240, 0.16);
+  --haze-violet: rgba(142, 108, 244, 0.12);
+  --haze-cyan: rgba(104, 186, 238, 0.12);
+
+  /* ---------- 字体 ---------- */
+  --font-display: 'LXGW WenKai', 'Songti SC', 'Source Han Serif SC', 'Noto Serif SC', 'SimSun', serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Code', 'JetBrains Mono', Consolas, 'Courier New',
+    monospace;
+
+  /* ---------- 字号（阅读优先） ---------- */
+  --t-label: 12.5px;
+  --t-small: 15px;
+  --t-body: 17px;
+  --t-lede: 19px;
+  --t-h3: 21px;
+  --t-h2: clamp(23px, 2.4vw, 28px);
+  --t-h1: clamp(30px, 3.6vw, 46px);
+  --t-hero: clamp(32px, 3.9vw, 48px);
+
+  /* ---------- 尺度 ---------- */
+  --gutter: clamp(20px, 4vw, 56px);
+  --maxw: 1200px;
+  --reading: 740px;
+  --head-h: 64px;
+  --section-gap: clamp(56px, 6.4vw, 96px);
+
+  /* ---------- 圆角与阴影（学习界面比档案站更柔和） ---------- */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --shadow-1: 0 1px 2px rgba(28, 36, 90, 0.05), 0 12px 28px -20px rgba(28, 36, 90, 0.24);
+  --shadow-2: 0 2px 8px rgba(28, 36, 90, 0.06), 0 28px 54px -30px rgba(28, 36, 90, 0.3);
+  --shadow-brand: 0 14px 32px -18px rgba(74, 78, 224, 0.5);
+
+  /* ---------- 动效 ---------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 0.18s;
+  --dur: 0.3s;
+
+  color-scheme: light;
+}
