@@ -277,6 +277,11 @@ export function ChallengeRunner({ onFinish }: ChallengeRunnerProps) {
   /* 卸载时清理自动进关定时器 */
   useEffect(() => () => clearAdvance(), [clearAdvance]);
 
+  /* Hook 必须在任何条件 return 之前调用（结束屏与非结束屏的 Hook 数量保持一致） */
+  const score = scores.reduce((sum, value) => sum + value, 0);
+  const shownScore = useCountUp(score);
+  const clockTone = remaining < 60 ? 'alert' : remaining < 300 ? 'warn' : undefined;
+
   if (result) {
     return (
       <ChallengeEnd
@@ -290,9 +295,6 @@ export function ChallengeRunner({ onFinish }: ChallengeRunnerProps) {
   }
 
   const enigma = STAGES[stageIndex];
-  const score = scores.reduce((sum, value) => sum + value, 0);
-  const shownScore = useCountUp(score);
-  const clockTone = remaining < 60 ? 'alert' : remaining < 300 ? 'warn' : undefined;
 
   return (
     <section className="game-run game-run--thunder" aria-label={t('challenge.title')}>
